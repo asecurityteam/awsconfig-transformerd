@@ -1,5 +1,5 @@
 <a id="markdown-AWSConfig Transformer" name="AWSConfig Transformer"></a>
-# AWSConfig Transformer - description
+# AWS Config Transformer - description
 
 <https://github.com/asecurityteam/awsconfig-transformer>
 
@@ -19,10 +19,11 @@
 <a id="markdown-overview" name="overview"></a>
 ## Overview<!-- TOC -->
 
-<What does this project do?>
-<What does this project _not_ do?>
-<Why did we make this project?>
-<Links to other references or material.>
+AWS Config provides a detailed view of the configuration of AWS resources, potentially across
+multiple AWS accounts, and can provide a stream of configuration change events via an SNS topic
+which publishes to SQS.  The awsconfig-transformerd service provides an API which accepts the SQS
+payload, transforms the data, and POSTs the transformed data to an HTTP endpoint, where they may
+be further transformed or otherwise processed and consumed by other services.
 
 <a id="markdown-quick-start" name="quick-start"></a>
 ## Quick Start
