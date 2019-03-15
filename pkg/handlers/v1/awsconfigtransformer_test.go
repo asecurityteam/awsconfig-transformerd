@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	gomock "github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -70,20 +71,68 @@ func TestMarshalling(t *testing.T) {
 
 }
 
-func TestTransform(t *testing.T) {
+func TestTransformEmptiness(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	expectedOutput := Output{}
+	expectedOutput := Output{
+		Changes: []Change{}}
 
-	mockObj := NewMockReporter(mockCtrl)
-	mockObj.EXPECT().Report(gomock.Any(), gomock.Eq(expectedOutput)).Return(nil)
+	output, err := Handle(nil, AWSConfigEvent{})
 
-	handler := AWSConfigChangeEventHandler{
-		Reporter: mockObj}
-
-	err := handler.Handle(nil, AWSConfigEvent{})
 	assert.Nil(t, err, "expected nil")
+	assert.NotNil(t, output)
+	assert.Equal(t, expectedOutput, output)
+}
+
+func TestTransformGoldenPath(t *testing.T) {
+	// a real payload:
+	const filename = "awsconfigpayload.json"
+
+	str, err := ioutil.ReadFile(filepath.Join("testdata", filename))
+	if err != nil {
+		t.Fatalf("failed to read file '%s': %s", filename, err)
+	}
+
+	res := AWSConfigEvent{}
+	json.Unmarshal(str, &res)
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	time, _ := time.Parse(time.RFC3339, "2017-01-09T22:50:14.328Z")
+
+	expectedOutput := Output{
+		AccountID:    "123456789012",
+		ChangeTime:   time, // from configurationItemCaptureTime // TODO: ok?
+		Region:       "us-east-2",
+		ResourceID:   "i-007d374c8912e3e90",
+		ResourceType: "AWS::EC2::Instance",
+		Tags:         map[string]string{"Name": "value"},
+		Changes:      []Change{}}
+
+	expectedChange0 := Change{}
+	expectedChange0.Hostnames = []string{"ip-172-31-16-84.ec2.internal", "ec2-54-175-43-43.compute-1.amazonaws.com"}
+	expectedChange0.PublicIPAddresses = []string{"54.175.43.43"}
+	expectedChange0.PrivateIPAddresses = []string{"172.31.16.84"}
+	expectedChange0.ChangeType = "DELETED"
+
+	expectedOutput.Changes = append(expectedOutput.Changes, expectedChange0)
+
+	expectedChange1 := Change{}
+	expectedChange1.Hostnames = []string{"ip-172-31-16-84.ec2.internal", "ec2-54-175-43-43.compute-1.amazonaws.com"}
+	expectedChange1.PublicIPAddresses = []string{"54.175.43.43"}
+	expectedChange1.PrivateIPAddresses = []string{"172.31.16.84"}
+	expectedChange1.ChangeType = "ADDED"
+
+	expectedOutput.Changes = append(expectedOutput.Changes, expectedChange1)
+
+	output, err := Handle(nil, res)
+
+	assert.Nil(t, err, "expected nil")
+	assert.NotNil(t, output)
+	assert.Equal(t, expectedOutput, output)
+
 }
 
 // JSONBytesEqual compares the JSON in two byte slices.

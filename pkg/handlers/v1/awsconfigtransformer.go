@@ -156,22 +156,20 @@ type AWSConfigEvent struct {
 		} `json:"configuration"`
 		SupplementaryConfiguration struct { // TODO: ???
 		} `json:"supplementaryConfiguration"`
-		Tags struct {
-			Name string `json:"Name"`
-		} `json:"tags"`
-		ConfigurationItemVersion     string      `json:"configurationItemVersion"`
-		ConfigurationItemCaptureTime time.Time   `json:"configurationItemCaptureTime"`
-		ConfigurationStateID         int64       `json:"configurationStateId"`
-		AwsAccountID                 string      `json:"awsAccountId"`
-		ConfigurationItemStatus      string      `json:"configurationItemStatus"`
-		ResourceType                 string      `json:"resourceType"`
-		ResourceID                   string      `json:"resourceId"`
-		ResourceName                 interface{} `json:"resourceName"` // TODO: string?
-		ARN                          string      `json:"ARN"`
-		AwsRegion                    string      `json:"awsRegion"`
-		AvailabilityZone             string      `json:"availabilityZone"`
-		ConfigurationStateMd5Hash    string      `json:"configurationStateMd5Hash"`
-		ResourceCreationTime         time.Time   `json:"resourceCreationTime"`
+		Tags                         map[string]string `json:"tags"`
+		ConfigurationItemVersion     string            `json:"configurationItemVersion"`
+		ConfigurationItemCaptureTime time.Time         `json:"configurationItemCaptureTime"`
+		ConfigurationStateID         int64             `json:"configurationStateId"`
+		AwsAccountID                 string            `json:"awsAccountId"`
+		ConfigurationItemStatus      string            `json:"configurationItemStatus"`
+		ResourceType                 string            `json:"resourceType"`
+		ResourceID                   string            `json:"resourceId"`
+		ResourceName                 interface{}       `json:"resourceName"` // TODO: string?
+		ARN                          string            `json:"ARN"`
+		AwsRegion                    string            `json:"awsRegion"`
+		AvailabilityZone             string            `json:"availabilityZone"`
+		ConfigurationStateMd5Hash    string            `json:"configurationStateMd5Hash"`
+		ResourceCreationTime         time.Time         `json:"resourceCreationTime"`
 	} `json:"configurationItem"`
 	NotificationCreationTime time.Time `json:"notificationCreationTime"`
 	MessageType              string    `json:"messageType"`
@@ -215,35 +213,56 @@ func (c *ConfigurationItemDiff) getConfigurationSecurityGroups() map[string]Conf
 	return configurationSecurityGroups
 }
 
-type Output struct {
+type Change struct {
 	PublicIPAddresses  []string `json:"publicIpAddresses"`
 	PrivateIPAddresses []string `json:"privateIpAddresses"`
 	Hostnames          []string `json:"hostnames"`
-	StartedAt          string   `json:"startedAt"` // date-time format
-	StoppedAt          string   `json:"stoppedAt"` // date-time format
-	ResourceType       string   `json:"resourceType"`
-	BusinessUnit       string   `json:"businessUnit"`  // guaranteed
-	ResourceOwner      string   `json:"resourceOwner"` // guaranteed
-	ServiceName        string   `json:"serviceName"`   // guaranteed
-	MicrosServiceID    string   `json:"microsServiceId"`
+	ChangeType         string   `json:"changeType"` // values are "ADDED" or "DELETED"
 }
 
-type AWSConfigChangeEventHandler struct {
-	Reporter Reporter
+// TODO: document which parts are required, per https://bitbucket.org/asecurityteam/secdev-docs/src/64ec70b2e544eb889ac3907a5715e97777e35e34/content/platform/security/refs/arch/assetinventory.md?at=SECD-214
+type Output struct {
+	ChangeTime   time.Time         `json:"changeTime"`   // time at which the asset change occurred, date-time format
+	ResourceType string            `json:"resourceType"` // the AWS resource type
+	AccountID    string            `json:"accountId"`    // the ID of the AWS account
+	Region       string            `json:"region"`       // the AWS region
+	ResourceID   string            `json:"resourceId"`   // the ID of the AWS resource
+	Tags         map[string]string `json:"tags"`         // AWS tags
+	Changes      []Change          `json:"changes"`
 }
 
 // function must satisfy AWS lambda.Start parameter spec.  Good enough: https://docs.aws.amazon.com/lambda/latest/dg/go-programming-model-handler-types.html
-func (h *AWSConfigChangeEventHandler) Handle(ctx context.Context, event AWSConfigEvent) error {
-	//return Output{ServiceName: "bob"}, nil // Output{Name: fmt.Sprintf("%s", event.Name)}, nil
-	outputs, _ := h.getOutput(&event)
-	for _, output := range outputs {
-		h.Reporter.Report(ctx, output)
-	}
-	return nil
-}
+func Handle(ctx context.Context, event AWSConfigEvent) (Output, error) {
+	output := Output{
+		AccountID:    event.ConfigurationItem.AwsAccountID,
+		ChangeTime:   event.ConfigurationItem.ConfigurationItemCaptureTime, // from configurationItemCaptureTime // TODO: ok?
+		Region:       event.ConfigurationItem.AwsRegion,
+		ResourceID:   event.ConfigurationItem.ResourceID,
+		ResourceType: event.ConfigurationItem.ResourceType,
+		Tags:         event.ConfigurationItem.Tags,
+		Changes:      []Change{}}
 
-func (h *AWSConfigChangeEventHandler) getOutput(event *AWSConfigEvent) ([]Output, error) {
-	outputs := []Output{}
-	outputs = append(outputs, Output{})
-	return outputs, nil
+	changedNetworkInterfaces := event.ConfigurationItemDiff.getChangedNetworkInterfaces()
+	for _, value := range changedNetworkInterfaces {
+		configurationNetworkInterfaceValue := value.PreviousValue
+		if configurationNetworkInterfaceValue == nil {
+			configurationNetworkInterfaceValue = value.UpdatedValue
+		}
+		change := Change{}
+		if value.ChangeType == "DELETE" {
+			change.ChangeType = "DELETED"
+		} else if value.ChangeType == "CREATE" {
+			change.ChangeType = "ADDED"
+		}
+		change.Hostnames = []string{configurationNetworkInterfaceValue.PrivateDNSName, configurationNetworkInterfaceValue.Association.PublicDNSName}
+		change.PrivateIPAddresses = []string{}
+		for _, privateIPAddress := range configurationNetworkInterfaceValue.PrivateIPAddresses {
+			change.PrivateIPAddresses = append(change.PrivateIPAddresses, privateIPAddress.PrivateIPAddress)
+		}
+		change.PublicIPAddresses = []string{configurationNetworkInterfaceValue.Association.PublicIP}
+
+		output.Changes = append(output.Changes, change)
+	}
+
+	return output, nil
 }
