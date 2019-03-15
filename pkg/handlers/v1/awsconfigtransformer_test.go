@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	gomock "github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -74,9 +73,6 @@ func TestMarshalling(t *testing.T) {
 }
 
 func TestTransformEmptiness(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
 	event := AWSConfigEvent{}
 	marshalled, _ := json.Marshal(event)
 
@@ -100,9 +96,6 @@ func TestTransformGoldenPath(t *testing.T) {
 
 	res := AWSConfigEvent{}
 	json.Unmarshal(str, &res)
-
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
 
 	time, _ := time.Parse(time.RFC3339, "2017-01-09T22:50:14.328Z")
 
@@ -135,7 +128,7 @@ func TestTransformGoldenPath(t *testing.T) {
 
 	assert.Nil(t, err, "expected nil")
 	assert.NotNil(t, output)
-	// key order in JSON is not guaranteed, so we don't know in what order the array will be arranged
+
 	assert.Equal(t, expectedOutput, output)
 
 }

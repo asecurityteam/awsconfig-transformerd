@@ -15,7 +15,8 @@ func main() {
 	ctx := context.Background()
 
 	handlersMap := map[string]serverfulldomain.Handler{
-		"awsConfigHandler": lambda.NewHandler(handlers.Handle)}
+		"awsConfigHandler": lambda.NewHandler(handlers.Handle),
+	}
 
 	source, err := settings.NewEnvSource(os.Environ())
 	if err != nil {
