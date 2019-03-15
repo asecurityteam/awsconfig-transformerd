@@ -1,5 +1,5 @@
 <a id="markdown-AWSConfig Transformer" name="AWSConfig Transformer"></a>
-# AWS Config Transformer - an service that receives AWS config changes and transforms them to a more consumable form, POSTing to a configured endpoint
+# AWS Config Transformer - a service that receives AWS config changes and transforms them to a more consumable form, POSTing to a configured endpoint
 
 <https://github.com/asecurityteam/awsconfig-transformer>
 
