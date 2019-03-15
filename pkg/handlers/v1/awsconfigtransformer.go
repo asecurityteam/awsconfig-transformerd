@@ -3,6 +3,9 @@ package v1
 import (
 	"context" // https://docs.aws.amazon.com/lambda/latest/dg/go-programming-model-context.html
 	"encoding/json"
+	"errors"
+	"fmt"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -176,41 +179,92 @@ type AWSConfigEvent struct {
 	RecordVersion            string    `json:"recordVersion"`
 }
 
-func (c *ConfigurationItemDiff) getChangedNetworkInterfaces() map[string]ConfigurationNetworkInterface {
+func (c *ConfigurationItemDiff) getChangedNetworkInterfaces() []ConfigurationNetworkInterface {
 
-	configurationNetworkInterfaces := make(map[string]ConfigurationNetworkInterface)
+	configurationNetworkInterfaces := make(map[int]*ConfigurationNetworkInterface)
 	for key, value := range c.ChangedProperties {
 		if strings.HasPrefix(key, "Configuration.NetworkInterfaces.") {
+			// we parse the index because JSON key order is not guaranteed,
+			// and by using the index from the original key, we preserve array
+			// order and make testing simpler and deterministic
+			stringSlice := strings.Split(key, ".")
+			index, _ := strconv.Atoi(stringSlice[len(stringSlice)-1])
 			configurationNetworkInterface := ConfigurationNetworkInterface{}
 			json.Unmarshal([]byte(value), &configurationNetworkInterface)
-			configurationNetworkInterfaces[key] = configurationNetworkInterface
+			configurationNetworkInterfaces[index] = &configurationNetworkInterface
 		}
 	}
-	return configurationNetworkInterfaces
+
+	// make an ordered array
+	configurationNetworkInterfacesArray := []ConfigurationNetworkInterface{}
+	i := 0
+	for {
+		c := configurationNetworkInterfaces[i]
+		if c == nil {
+			break
+		}
+		configurationNetworkInterfacesArray = append(configurationNetworkInterfacesArray, *c)
+		i++
+	}
+	return configurationNetworkInterfacesArray
 }
 
-func (c *ConfigurationItemDiff) getRelationships() map[string]Relationship {
-	relationships := make(map[string]Relationship)
+func (c *ConfigurationItemDiff) getRelationships() []Relationship {
+	relationships := make(map[int]*Relationship)
 	for key, value := range c.ChangedProperties {
 		if strings.HasPrefix(key, "Relationships.") {
+			// we parse the index because JSON key order is not guaranteed,
+			// and by using the index from the original key, we preserve array
+			// order and make testing simpler and deterministic
+			stringSlice := strings.Split(key, ".")
+			index, _ := strconv.Atoi(stringSlice[len(stringSlice)-1])
 			relationship := Relationship{}
 			json.Unmarshal([]byte(value), &relationship)
-			relationships[key] = relationship
+			relationships[index] = &relationship
 		}
 	}
-	return relationships
+
+	// make an ordered array
+	relationshipsArray := []Relationship{}
+	i := 0
+	for {
+		r := relationships[i]
+		if r == nil {
+			break
+		}
+		relationshipsArray = append(relationshipsArray, *r)
+		i++
+	}
+	return relationshipsArray
 }
 
-func (c *ConfigurationItemDiff) getConfigurationSecurityGroups() map[string]ConfigurationSecurityGroup {
-	configurationSecurityGroups := make(map[string]ConfigurationSecurityGroup)
+func (c *ConfigurationItemDiff) getConfigurationSecurityGroups() []ConfigurationSecurityGroup {
+	configurationSecurityGroups := make(map[int]*ConfigurationSecurityGroup)
 	for key, value := range c.ChangedProperties {
 		if strings.HasPrefix(key, "Configuration.SecurityGroups.") {
+			// we parse the index because JSON key order is not guaranteed,
+			// and by using the index from the original key, we preserve array
+			// order and make testing simpler and deterministic
+			stringSlice := strings.Split(key, ".")
+			index, _ := strconv.Atoi(stringSlice[len(stringSlice)-1])
 			configurationSecurityGroup := ConfigurationSecurityGroup{}
 			json.Unmarshal([]byte(value), &configurationSecurityGroup)
-			configurationSecurityGroups[key] = configurationSecurityGroup
+			configurationSecurityGroups[index] = &configurationSecurityGroup
 		}
 	}
-	return configurationSecurityGroups
+
+	// make an ordered array
+	configurationSecurityGroupsArray := []ConfigurationSecurityGroup{}
+	i := 0
+	for {
+		r := configurationSecurityGroups[i]
+		if r == nil {
+			break
+		}
+		configurationSecurityGroupsArray = append(configurationSecurityGroupsArray, *r)
+		i++
+	}
+	return configurationSecurityGroupsArray
 }
 
 type Change struct {
@@ -262,6 +316,11 @@ func Handle(ctx context.Context, event AWSConfigEvent) (Output, error) {
 		change.PublicIPAddresses = []string{configurationNetworkInterfaceValue.Association.PublicIP}
 
 		output.Changes = append(output.Changes, change)
+	}
+
+	if len(output.Changes) == 0 {
+		marshalled, _ := json.Marshal(event)
+		return output, errors.New(fmt.Sprintf("Failed to transform AWS Config change event due to lack of sufficient information. The already-marshalled AWS change event was: %s", string(marshalled)))
 	}
 
 	return output, nil

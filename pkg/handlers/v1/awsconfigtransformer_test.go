@@ -2,6 +2,8 @@ package v1
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"reflect"
@@ -35,24 +37,24 @@ func TestMarshalling(t *testing.T) {
 	changedNetworkInterfaces := res.ConfigurationItemDiff.getChangedNetworkInterfaces()
 	assert.NotNil(t, changedNetworkInterfaces, "should have got back a non-nil map")
 	assert.Equal(t, len(changedNetworkInterfaces), 2, "expected map size of 2")
-	assert.NotNil(t, changedNetworkInterfaces["Configuration.NetworkInterfaces.0"], "should have got back a non-nil map")
-	assert.Equal(t, "eni-fde9493f", changedNetworkInterfaces["Configuration.NetworkInterfaces.0"].PreviousValue.NetworkInterfaceID, "expected equality")
-	assert.Nil(t, changedNetworkInterfaces["Configuration.NetworkInterfaces.0"].UpdatedValue, "expected nil")
-	assert.Equal(t, "DELETE", changedNetworkInterfaces["Configuration.NetworkInterfaces.0"].ChangeType, "expected equality")
+	assert.NotNil(t, changedNetworkInterfaces[0], "should have got back a non-nil map")
+	assert.Equal(t, "eni-fde9493f", changedNetworkInterfaces[0].PreviousValue.NetworkInterfaceID, "expected equality")
+	assert.Nil(t, changedNetworkInterfaces[0].UpdatedValue, "expected nil")
+	assert.Equal(t, "DELETE", changedNetworkInterfaces[0].ChangeType, "expected equality")
 
 	securityGroups := res.ConfigurationItemDiff.getConfigurationSecurityGroups()
 	assert.NotNil(t, securityGroups, "should have got back a non-nil map")
 	assert.Equal(t, len(securityGroups), 2, "expected map size of 2")
-	assert.Nil(t, securityGroups["Configuration.SecurityGroups.1"].PreviousValue, "expected nil")
-	assert.NotNil(t, securityGroups["Configuration.SecurityGroups.1"].UpdatedValue, "expected non-nil")
-	assert.Equal(t, "example-security-group-2", securityGroups["Configuration.SecurityGroups.1"].UpdatedValue.GroupName, "expected equality")
+	assert.Nil(t, securityGroups[1].PreviousValue, "expected nil")
+	assert.NotNil(t, securityGroups[1].UpdatedValue, "expected non-nil")
+	assert.Equal(t, "example-security-group-2", securityGroups[1].UpdatedValue.GroupName, "expected equality")
 
 	relationships := res.ConfigurationItemDiff.getRelationships()
 	assert.NotNil(t, relationships, "should have got back a non-nil map")
 	assert.Equal(t, len(relationships), 2, "expected map size of 2")
-	assert.Nil(t, relationships["Relationships.0"].UpdatedValue, "expected nil")
-	assert.NotNil(t, relationships["Relationships.0"].PreviousValue, "expected non-nil")
-	assert.Equal(t, "sg-c8b141b4", relationships["Relationships.0"].PreviousValue.ResourceID, "expected equality")
+	assert.Nil(t, relationships[0].UpdatedValue, "expected nil")
+	assert.NotNil(t, relationships[0].PreviousValue, "expected non-nil")
+	assert.Equal(t, "sg-c8b141b4", relationships[0].PreviousValue.ResourceID, "expected equality")
 
 	assert.Empty(t, res.ConfigurationItem.Configuration.StateTransitionReason, "expected empty string")
 	assert.Nil(t, res.ConfigurationItem.Configuration.KernelID, "expected nil")
@@ -75,14 +77,16 @@ func TestTransformEmptiness(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	expectedOutput := Output{
-		Changes: []Change{}}
+	event := AWSConfigEvent{}
+	marshalled, _ := json.Marshal(event)
 
-	output, err := Handle(nil, AWSConfigEvent{})
+	expectedError := errors.New(fmt.Sprintf("Failed to transform AWS Config change event due to lack of sufficient information. The already-marshalled AWS change event was: %s", string(marshalled)))
 
-	assert.Nil(t, err, "expected nil")
-	assert.NotNil(t, output)
-	assert.Equal(t, expectedOutput, output)
+	output, err := Handle(nil, event)
+
+	assert.NotNil(t, output, "expected non-nil")
+	assert.NotNil(t, err, "expected non-nil")
+	assert.Equal(t, expectedError, err)
 }
 
 func TestTransformGoldenPath(t *testing.T) {
@@ -131,6 +135,7 @@ func TestTransformGoldenPath(t *testing.T) {
 
 	assert.Nil(t, err, "expected nil")
 	assert.NotNil(t, output)
+	// key order in JSON is not guaranteed, so we don't know in what order the array will be arranged
 	assert.Equal(t, expectedOutput, output)
 
 }
