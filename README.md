@@ -1,5 +1,5 @@
 <a id="markdown-AWSConfig Transformer" name="AWSConfig Transformer"></a>
-# AWS Config Transformer - description
+# AWS Config Transformer - an service that receives AWS config changes and transforms them to a more consumable form, POSTing to a configured endpoint
 
 <https://github.com/asecurityteam/awsconfig-transformer>
 
@@ -24,6 +24,81 @@ multiple AWS accounts, and can provide a stream of configuration change events v
 which publishes to SQS.  The awsconfig-transformerd service provides an API which accepts the SQS
 payload, transforms the data, and POSTs the transformed data to an HTTP endpoint, where they may
 be further transformed or otherwise processed and consumed by other services.
+
+Example topic payloads can be seen at AWS's Developer Guide page, but beware, the data is old.  To
+gain a complete understanding of the variances in notification payloads, it is recommended to
+gather real notifications of actual change events.
+
+The current implementation of this filter only observes `"changeType": "UPDATE"` events, and only
+records and transforms `Configuration.NetworkInterfaces.*` changes.  All other config change types
+are ignored.  The payload emitted from this transformer adheres to the following JSON specification:
+
+```
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Schema for cloud asset change events",
+  "properties": {
+    "publicIpAddresses": {
+      "type": "array",
+      "title": "public IP addresses for the asset",
+      "items": {
+          "type": "string"
+      }
+    },
+    "privateIpAddresses": {
+      "type": "array",
+      "title": "private IP addresses for the asset",
+      "items": {
+          "type": "string"
+      }
+    },
+    "hostnames": {
+      "type": "array",
+      "title": "hostnames of the asset",
+      "items": {
+          "type": "string"
+      }
+    },
+    "startedAt": {
+      "type": "string",
+      "title": "time at which the asset is discovered",
+      "format": "date-time"
+    },
+    "stoppedAt": {
+      "type": "string",
+      "title": "time at which the asset is offline",
+      "format": "date-time"
+    },
+    "resourceType": {
+      "type": "string",
+      "title": "the AWS resource type"
+    },
+    "businessUnit": {
+      "type": "string",
+      "title": "the business unit to which the asset belongs"
+    },
+    "resourceOwner": {
+      "type": "string",
+      "title": "the asset owner"
+    },
+    "serviceName": {
+      "type": "string",
+      "title": "the name of the related service"
+    },
+    "microsServiceId": {
+        "type": "string",
+        "title": "the ID of the service in micros"
+    }
+  },
+  "required": [
+    "businessUnit",
+    "resourceOwner",
+    "serviceName"
+  ]
+}
+```
+
 
 <a id="markdown-quick-start" name="quick-start"></a>
 ## Quick Start
