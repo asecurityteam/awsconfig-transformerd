@@ -1,5 +1,6 @@
 <a id="markdown-AWSConfig Transformer" name="AWSConfig Transformer"></a>
-# AWS Config Transformer - a service that receives AWS config changes and transforms them to a more consumable form, POSTing to a configured endpoint
+# AWS Config Transformer - a lambda handler that receives AWS Config changes and returns a transformed
+version of the Config change
 
 <https://github.com/asecurityteam/awsconfig-transformer>
 
@@ -7,6 +8,7 @@
     - [Overview](#overview)
     - [Quick Start](#quick-start)
     - [Configuration](#configuration)
+    - [Supported Resources](#supported-resources)
     - [Status](#status)
     - [Contributing](#contributing)
         - [Building And Testing](#building-and-testing)
@@ -21,17 +23,17 @@
 
 AWS Config provides a detailed view of the configuration of AWS resources, potentially across
 multiple AWS accounts, and can provide a stream of configuration change events via an SNS topic
-which publishes to SQS.  The awsconfig-transformerd service provides an API which accepts the SQS
-payload, transforms the data, and POSTs the transformed data to an HTTP endpoint, where they may
-be further transformed or otherwise processed and consumed by other services.
+which publishes to SQS.  The awsconfig-transformerd service provides a lambda handler which accepts
+the SQS payload, and retuns a transformed copy of the payload. The goal of the transformation is to
+highlight changes to the network interfaces associated with AWS resources.
 
 Example topic payloads can be seen at AWS's Developer Guide page, but beware, the data is old.  To
 gain a complete understanding of the variances in notification payloads, it is recommended to
 gather real notifications of actual change events.
 
-The current implementation of this filter only observes `"changeType": "UPDATE"` events, and only
-records and transforms `Configuration.NetworkInterfaces.*` changes.  All other config change types
-are ignored.  The payload emitted from this transformer adheres to the following JSON specification:
+For the current list of supported resource types, see [Supported Resources](#supported-resources).
+All other config change types are ignored. The payload emitted from this transformer adheres to the
+following JSON specification:
 
 ```
 {
@@ -109,6 +111,14 @@ are ignored.  The payload emitted from this transformer adheres to the following
 ## Configuration
 
 <Details of how to actually work with the project>
+
+<a id="markdown-supported-resources" name="supported-resources"></a>
+## Supported Resources
+
+The current version only supports extracting network changes from:
+* EC2 instances
+* Elastic Load Balancers
+* Application Load Balancers
 
 <a id="markdown-status" name="status"></a>
 ## Status
