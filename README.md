@@ -41,62 +41,78 @@ following JSON specification:
   "type": "object",
   "title": "Schema for cloud asset change events",
   "properties": {
-    "publicIpAddresses": {
-      "type": "array",
-      "title": "public IP addresses for the asset",
-      "items": {
-          "type": "string"
-      }
-    },
-    "privateIpAddresses": {
-      "type": "array",
-      "title": "private IP addresses for the asset",
-      "items": {
-          "type": "string"
-      }
-    },
-    "hostnames": {
-      "type": "array",
-      "title": "hostnames of the asset",
-      "items": {
-          "type": "string"
-      }
-    },
-    "startedAt": {
+    "changeTime": {
       "type": "string",
-      "title": "time at which the asset is discovered",
-      "format": "date-time"
-    },
-    "stoppedAt": {
-      "type": "string",
-      "title": "time at which the asset is offline",
+      "title": "time at which the asset change occurred",
       "format": "date-time"
     },
     "resourceType": {
       "type": "string",
       "title": "the AWS resource type"
     },
-    "businessUnit": {
+    "accountId": {
       "type": "string",
-      "title": "the business unit to which the asset belongs"
+      "title": "the ID of the AWS account"
     },
-    "resourceOwner": {
+    "region": {
       "type": "string",
-      "title": "the asset owner"
+      "title": "the AWS region"
     },
-    "serviceName": {
+    "resourceId": {
       "type": "string",
-      "title": "the name of the related service"
+      "title": "the ID of the AWS resource"
     },
-    "microsServiceId": {
-        "type": "string",
-        "title": "the ID of the service in micros"
+    "tags": {
+      "type": "object",
+      "title": "AWS tags",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "changes": {
+      "type": "array",
+      "title": "list of changes which occurred",
+      "items": {
+        "type": "object",
+        "properties": {
+          "publicIpAddresses": {
+            "type": "array",
+            "title": "public IP addresses for the asset",
+            "items": {
+              "type": "string"
+            }
+          },
+          "privateIpAddresses": {
+            "type": "array",
+            "title": "private IP addresses for the asset",
+            "items": {
+              "type": "string"
+            }
+          },
+          "hostnames": {
+            "type": "array",
+            "title": "hostnames of the asset",
+            "items": {
+              "type": "string"
+            }
+          },
+          "changeType": {
+            "type": "string",
+            "title": "the type of change which occurred",
+            "enum": ["ADDED", "DELETED"]
+          }
+        }
+      }
     }
   },
   "required": [
-    "businessUnit",
-    "resourceOwner",
-    "serviceName"
+    "changeTime",
+    "resourceType",
+    "accountId",
+    "region",
+    "resourceId",
+    "tags",
+    "changes"
   ]
 }
 ```
