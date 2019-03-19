@@ -37,8 +37,8 @@ x-transportd:
       count: 1
 info:
   version: 1.0.0
-  title: "AWSConfig Transformer"
-  description: "description"
+  title: "AWS Config Transformer"
+  description: "a lambda handler that receives AWS Config changes and returns a transformed version of the Config change"
   contact:
     name: Security Development
     email: secdev-external@atlassian.com

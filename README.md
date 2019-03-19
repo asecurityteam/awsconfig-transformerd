@@ -1,5 +1,6 @@
 <a id="markdown-AWSConfig Transformer" name="AWSConfig Transformer"></a>
-# AWSConfig Transformer - description
+# AWS Config Transformer - a lambda handler that receives AWS Config changes and returns a transformed
+version of the Config change
 
 <https://github.com/asecurityteam/awsconfig-transformer>
 
@@ -7,6 +8,7 @@
     - [Overview](#overview)
     - [Quick Start](#quick-start)
     - [Configuration](#configuration)
+    - [Supported Resources](#supported-resources)
     - [Status](#status)
     - [Contributing](#contributing)
         - [Building And Testing](#building-and-testing)
@@ -19,10 +21,103 @@
 <a id="markdown-overview" name="overview"></a>
 ## Overview<!-- TOC -->
 
-<What does this project do?>
-<What does this project _not_ do?>
-<Why did we make this project?>
-<Links to other references or material.>
+AWS Config provides a detailed view of the configuration of AWS resources, potentially across
+multiple AWS accounts, and can provide a stream of configuration change events via an SNS topic
+which publishes to SQS.  The awsconfig-transformerd service provides a lambda handler which accepts
+the [configuration item change notification](https://docs.aws.amazon.com/config/latest/developerguide/example-sns-notification.html) payload,
+extracts the changed network information, and returns a transformed version of the configuration change.
+The goal of the transformation is to highlight changes to the network interfaces associated with AWS resources.
+
+Example topic payloads can be seen at AWS's Developer Guide page, but beware, the data is old.  To
+gain a complete understanding of the variances in notification payloads, it is recommended to
+gather real notifications of actual change events.
+
+For the current list of supported resource types, see [Supported Resources](#supported-resources).
+All other config change types are ignored. The payload emitted from this transformer adheres to the
+following JSON specification:
+
+```
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Schema for cloud asset change events",
+  "properties": {
+    "changeTime": {
+      "type": "string",
+      "title": "time at which the asset change occurred",
+      "format": "date-time"
+    },
+    "resourceType": {
+      "type": "string",
+      "title": "the AWS resource type"
+    },
+    "accountId": {
+      "type": "string",
+      "title": "the ID of the AWS account"
+    },
+    "region": {
+      "type": "string",
+      "title": "the AWS region"
+    },
+    "resourceId": {
+      "type": "string",
+      "title": "the ID of the AWS resource"
+    },
+    "tags": {
+      "type": "object",
+      "title": "AWS tags",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "changes": {
+      "type": "array",
+      "title": "list of changes which occurred",
+      "items": {
+        "type": "object",
+        "properties": {
+          "publicIpAddresses": {
+            "type": "array",
+            "title": "public IP addresses for the asset",
+            "items": {
+              "type": "string"
+            }
+          },
+          "privateIpAddresses": {
+            "type": "array",
+            "title": "private IP addresses for the asset",
+            "items": {
+              "type": "string"
+            }
+          },
+          "hostnames": {
+            "type": "array",
+            "title": "hostnames of the asset",
+            "items": {
+              "type": "string"
+            }
+          },
+          "changeType": {
+            "type": "string",
+            "title": "the type of change which occurred",
+            "enum": ["ADDED", "DELETED"]
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "changeTime",
+    "resourceType",
+    "accountId",
+    "region",
+    "resourceId",
+    "tags",
+    "changes"
+  ]
+}
+```
+
 
 <a id="markdown-quick-start" name="quick-start"></a>
 ## Quick Start
@@ -33,6 +128,14 @@
 ## Configuration
 
 <Details of how to actually work with the project>
+
+<a id="markdown-supported-resources" name="supported-resources"></a>
+## Supported Resources
+
+The current version only supports extracting network changes from:
+* EC2 instances
+* Elastic Load Balancers
+* Application Load Balancers
 
 <a id="markdown-status" name="status"></a>
 ## Status
