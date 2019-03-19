@@ -24,8 +24,9 @@ version of the Config change
 AWS Config provides a detailed view of the configuration of AWS resources, potentially across
 multiple AWS accounts, and can provide a stream of configuration change events via an SNS topic
 which publishes to SQS.  The awsconfig-transformerd service provides a lambda handler which accepts
-the SQS payload, and retuns a transformed copy of the payload. The goal of the transformation is to
-highlight changes to the network interfaces associated with AWS resources.
+the [configuration item change notification](https://docs.aws.amazon.com/config/latest/developerguide/example-sns-notification.html) payload,
+extracts the changed network information, and returns a transformed version of the configuration change.
+The goal of the transformation is to highlight changes to the network interfaces associated with AWS resources.
 
 Example topic payloads can be seen at AWS's Developer Guide page, but beware, the data is old.  To
 gain a complete understanding of the variances in notification payloads, it is recommended to
