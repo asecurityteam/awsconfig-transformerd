@@ -4,6 +4,8 @@ import (
 	"context"
 	"os"
 
+	handlers "bitbucket.org/asecurityteam/awsconfig-transformerd/pkg/handlers/v1"
+	"github.com/asecurityteam/runhttp"
 	serverfull "github.com/asecurityteam/serverfull/pkg"
 	serverfulldomain "github.com/asecurityteam/serverfull/pkg/domain"
 	"github.com/asecurityteam/settings"
@@ -12,17 +14,21 @@ import (
 
 func main() {
 	ctx := context.Background()
-	var _ lambda.Handler = nil // Placeholder to keep lambda imported. Delete after adding to the map.
-	handlers := map[string]serverfulldomain.Handler{
-		// TODO: Register lambda functions here in the form of
-		// "name_or_arn": lambda.NewHandler(myHandler.Handle)
+
+	transformer := &handlers.Transformer{
+		LogFn:  runhttp.LoggerFromContext,
+		StatFn: runhttp.StatFromContext,
+	}
+
+	handlersMap := map[string]serverfulldomain.Handler{
+		"awsConfigHandler": lambda.NewHandler(transformer.Handle),
 	}
 
 	source, err := settings.NewEnvSource(os.Environ())
 	if err != nil {
 		panic(err.Error())
 	}
-	rt, err := serverfull.NewStatic(ctx, source, handlers)
+	rt, err := serverfull.NewStatic(ctx, source, handlersMap)
 	if err != nil {
 		panic(err.Error())
 	}

@@ -1,0 +1,306 @@
+{
+    "configurationItemDiff": {
+        "changedProperties": {
+            "Configuration.NetworkInterfaces.0": {
+                "previousValue": {
+                    "networkInterfaceId": "eni-fde9493f",
+                    "subnetId": "subnet-2372be7b",
+                    "vpcId": "vpc-14400670",
+                    "description": "",
+                    "ownerId": "123456789012",
+                    "status": "in-use",
+                    "macAddress": "0e:36:a2:2d:c5:e0",
+                    "privateIpAddress": "172.31.16.84",
+                    "privateDnsName": "ip-172-31-16-84.ec2.internal",
+                    "sourceDestCheck": true,
+                    "groups": [
+                        {
+                            "groupName": "example-security-group-1",
+                            "groupId": "sg-c8b141b4"
+                        }
+                    ],
+                    "attachment": {
+                        "attachmentId": "eni-attach-85bd89d9",
+                        "deviceIndex": 0,
+                        "status": "attached",
+                        "attachTime": "2017-01-09T19:36:02Z",
+                        "deleteOnTermination": true
+                    },
+                    "association": {
+                        "publicIp": "54.175.43.43",
+                        "publicDnsName": "ec2-54-175-43-43.compute-1.amazonaws.com",
+                        "ipOwnerId": "amazon"
+                    },
+                    "privateIpAddresses": [
+                        {
+                            "privateIpAddress": "172.31.16.84",
+                            "privateDnsName": "ip-172-31-16-84.ec2.internal",
+                            "primary": true,
+                            "association": {
+                                "publicIp": "54.175.43.43",
+                                "publicDnsName": "ec2-54-175-43-43.compute-1.amazonaws.com",
+                                "ipOwnerId": "amazon"
+                            }
+                        }
+                    ]
+                },
+                "updatedValue": null,
+                "changeType": "DELETE"
+            },
+            "Relationships.0": {
+                "previousValue": {
+                    "resourceId": "sg-c8b141b4",
+                    "resourceName": null,
+                    "resourceType": "AWS::EC2::SecurityGroup",
+                    "name": "Is associated with SecurityGroup"
+                },
+                "updatedValue": null,
+                "changeType": "DELETE"
+            },
+            "Configuration.NetworkInterfaces.1": {
+                "previousValue": null,
+                "updatedValue": {
+                    "networkInterfaceId": "eni-fde9493f",
+                    "subnetId": "subnet-2372be7b",
+                    "vpcId": "vpc-14400670",
+                    "description": "",
+                    "ownerId": "123456789012",
+                    "status": "in-use",
+                    "macAddress": "0e:36:a2:2d:c5:e0",
+                    "privateIpAddress": "172.31.16.84",
+                    "privateDnsName": "ip-172-31-16-84.ec2.internal",
+                    "sourceDestCheck": true,
+                    "groups": [
+                        {
+                            "groupName": "example-security-group-2",
+                            "groupId": "sg-3f1fef43"
+                        }
+                    ],
+                    "attachment": {
+                        "attachmentId": "eni-attach-85bd89d9",
+                        "deviceIndex": 0,
+                        "status": "attached",
+                        "attachTime": "2017-01-09T19:36:02Z",
+                        "deleteOnTermination": true
+                    },
+                    "association": {
+                        "publicIp": "54.175.43.43",
+                        "publicDnsName": "ec2-54-175-43-43.compute-1.amazonaws.com",
+                        "ipOwnerId": "amazon"
+                    },
+                    "privateIpAddresses": [
+                        {
+                            "privateIpAddress": "172.31.16.84",
+                            "privateDnsName": "ip-172-31-16-84.ec2.internal",
+                            "primary": true,
+                            "association": {
+                                "publicIp": "54.175.43.43",
+                                "publicDnsName": "ec2-54-175-43-43.compute-1.amazonaws.com",
+                                "ipOwnerId": "amazon"
+                            }
+                        }
+                    ]
+                },
+                "changeType": "CREATE"
+            },
+            "Relationships.1": {
+                "previousValue": null,
+                "updatedValue": {
+                    "resourceId": "sg-3f1fef43",
+                    "resourceName": null,
+                    "resourceType": "AWS::EC2::SecurityGroup",
+                    "name": "Is associated with SecurityGroup"
+                },
+                "changeType": "CREATE"
+            },
+            "Configuration.SecurityGroups.1": {
+                "previousValue": null,
+                "updatedValue": {
+                    "groupName": "example-security-group-2",
+                    "groupId": "sg-3f1fef43"
+                },
+                "changeType": "CREATE"
+            },
+            "Configuration.SecurityGroups.0": {
+                "previousValue": {
+                    "groupName": "example-security-group-1",
+                    "groupId": "sg-c8b141b4"
+                },
+                "updatedValue": null,
+                "changeType": "DELETE"
+            }
+        },
+        "changeType": "UPDATE"
+    },
+    "configurationItem": {
+        "relatedEvents": [
+            "e61e1419-7cb0-477f-8dde-bbfe27467a96"
+        ],
+        "relationships": [
+            {
+                "resourceId": "eni-fde9493f",
+                "resourceName": null,
+                "resourceType": "AWS::EC2::NetworkInterface",
+                "name": "Contains NetworkInterface"
+            },
+            {
+                "resourceId": "sg-3f1fef43",
+                "resourceName": null,
+                "resourceType": "AWS::EC2::SecurityGroup",
+                "name": "Is associated with SecurityGroup"
+            },
+            {
+                "resourceId": "subnet-2372be7b",
+                "resourceName": null,
+                "resourceType": "AWS::EC2::Subnet",
+                "name": "Is contained in Subnet"
+            },
+            {
+                "resourceId": "vol-0a2d63a256bce35c5",
+                "resourceName": null,
+                "resourceType": "AWS::EC2::Volume",
+                "name": "Is attached to Volume"
+            },
+            {
+                "resourceId": "vpc-14400670",
+                "resourceName": null,
+                "resourceType": "AWS::EC2::VPC",
+                "name": "Is contained in Vpc"
+            }
+        ],
+        "configuration": {
+            "instanceId": "i-007d374c8912e3e90",
+            "imageId": "ami-9be6f38c",
+            "state": {
+                "code": 16,
+                "name": "running"
+            },
+            "privateDnsName": "ip-172-31-16-84.ec2.internal",
+            "publicDnsName": "ec2-54-175-43-43.compute-1.amazonaws.com",
+            "stateTransitionReason": "",
+            "keyName": "ec2-micro",
+            "amiLaunchIndex": 0,
+            "productCodes": [],
+            "instanceType": "t2.micro",
+            "launchTime": "2017-01-09T20:13:28Z",
+            "placement": {
+                "availabilityZone": "us-east-2c",
+                "groupName": "",
+                "tenancy": "default",
+                "hostId": null,
+                "affinity": null
+            },
+            "kernelId": null,
+            "ramdiskId": null,
+            "platform": null,
+            "monitoring": {
+                "state": "disabled"
+            },
+            "subnetId": "subnet-2372be7b",
+            "vpcId": "vpc-14400670",
+            "privateIpAddress": "172.31.16.84",
+            "publicIpAddress": "54.175.43.43",
+            "stateReason": null,
+            "architecture": "x86_64",
+            "rootDeviceType": "ebs",
+            "rootDeviceName": "/dev/xvda",
+            "blockDeviceMappings": [
+                {
+                    "deviceName": "/dev/xvda",
+                    "ebs": {
+                        "volumeId": "vol-0a2d63a256bce35c5",
+                        "status": "attached",
+                        "attachTime": "2017-01-09T19:36:03Z",
+                        "deleteOnTermination": true
+                    }
+                }
+            ],
+            "virtualizationType": "hvm",
+            "instanceLifecycle": null,
+            "spotInstanceRequestId": null,
+            "clientToken": "bIYqA1483990561516",
+            "tags": [
+                {
+                    "key": "Name",
+                    "value": "value"
+                }
+            ],
+            "securityGroups": [
+                {
+                    "groupName": "example-security-group-2",
+                    "groupId": "sg-3f1fef43"
+                }
+            ],
+            "sourceDestCheck": true,
+            "hypervisor": "xen",
+            "networkInterfaces": [
+                {
+                    "networkInterfaceId": "eni-fde9493f",
+                    "subnetId": "subnet-2372be7b",
+                    "vpcId": "vpc-14400670",
+                    "description": "",
+                    "ownerId": "123456789012",
+                    "status": "in-use",
+                    "macAddress": "0e:36:a2:2d:c5:e0",
+                    "privateIpAddress": "172.31.16.84",
+                    "privateDnsName": "ip-172-31-16-84.ec2.internal",
+                    "sourceDestCheck": true,
+                    "groups": [
+                        {
+                            "groupName": "example-security-group-2",
+                            "groupId": "sg-3f1fef43"
+                        }
+                    ],
+                    "attachment": {
+                        "attachmentId": "eni-attach-85bd89d9",
+                        "deviceIndex": 0,
+                        "status": "attached",
+                        "attachTime": "2017-01-09T19:36:02Z",
+                        "deleteOnTermination": true
+                    },
+                    "association": {
+                        "publicIp": "54.175.43.43",
+                        "publicDnsName": "ec2-54-175-43-43.compute-1.amazonaws.com",
+                        "ipOwnerId": "amazon"
+                    },
+                    "privateIpAddresses": [
+                        {
+                            "privateIpAddress": "172.31.16.84",
+                            "privateDnsName": "ip-172-31-16-84.ec2.internal",
+                            "primary": true,
+                            "association": {
+                                "publicIp": "54.175.43.43",
+                                "publicDnsName": "ec2-54-175-43-43.compute-1.amazonaws.com",
+                                "ipOwnerId": "amazon"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "iamInstanceProfile": null,
+            "ebsOptimized": false,
+            "sriovNetSupport": null,
+            "enaSupport": true
+        },
+        "supplementaryConfiguration": {},
+        "tags": {
+            "Name": "value"
+        },
+        "configurationItemVersion": "1.2",
+        "configurationItemCaptureTime": "2017-01-09T22:50:14.328Z",
+        "configurationStateId": 1484002214328,
+        "awsAccountId": "123456789012",
+        "configurationItemStatus": "OK",
+        "resourceType": "AWS::EC2::Instance",
+        "resourceId": "i-007d374c8912e3e90",
+        "resourceName": null,
+        "ARN": "arn:aws:ec2:us-east-2:123456789012:instance/i-007d374c8912e3e90",
+        "awsRegion": "us-east-2",
+        "availabilityZone": "us-east-2c",
+        "configurationStateMd5Hash": "8d0f41750f5965e0071ae9be063ba306",
+        "resourceCreationTime": "2017-01-09T20:13:28Z"
+    },
+    "notificationCreationTime": "2017-01-09T22:50:15.928Z",
+    "messageType": "ConfigurationItemChangeNotification",
+    "recordVersion": "1.2"
+}
