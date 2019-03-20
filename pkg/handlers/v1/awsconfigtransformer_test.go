@@ -24,23 +24,13 @@ func TestAWSConfigEventMarshalling(t *testing.T) {
 		t.Fatalf("failed to read file '%s': %s", filename, err)
 	}
 
-	// if you want to see the raw string:
-	// fmt.Println(string(data))
-
 	res := awsConfigEvent{}
 	_ = json.Unmarshal(data, &res)
 
 	assert.NotNil(t, res.ConfigurationItemDiff.ChangedProperties, "marshalling should have resulted in non-nil value")
 	marshaled, _ := json.MarshalIndent(res, "", "    ")
-	// if you want to see it:
-	// fmt.Println(string(marshaled))
 
-	jsonEquals, _ := jsonBytesEqual(data, marshaled)
-
-	assert.True(t, jsonEquals, "expect exact JSON equality before marshall/unmarshal and after.  "+
-		"If they're not, it's probably because your JSON key does not match the field name "+
-		"or you did not use a pointer where you should have")
-
+	assert.JSONEq(t, string(data), string(marshaled))
 }
 
 func TestTransformEmptiness(t *testing.T) {
@@ -313,16 +303,4 @@ func TestTransformEC2(t *testing.T) {
 			assert.True(t, reflect.DeepEqual(tt.ExpectedOutput.Changes, output.Changes), "The expected changes were different than the result")
 		})
 	}
-}
-
-// JSONBytesEqual compares the JSON in two byte slices.
-func jsonBytesEqual(a, b []byte) (bool, error) {
-	var j, j2 interface{}
-	if err := json.Unmarshal(a, &j); err != nil {
-		return false, err
-	}
-	if err := json.Unmarshal(b, &j2); err != nil {
-		return false, err
-	}
-	return reflect.DeepEqual(j2, j), nil
 }

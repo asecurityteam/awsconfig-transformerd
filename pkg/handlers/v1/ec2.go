@@ -99,9 +99,9 @@ func ec2Output(event awsConfigEvent) (Output, error) {
 			changes.Hostnames = append(changes.Hostnames, dns...)
 		}
 
-		// We need to dedup across the sets of changes to reduce redundancy.
+		// We need to compute the symmetric difference of the added changes and the removed changes
 		// i.e. remove entries that show up as both added and removed
-		removeDuplicates(&addedChanges, &deletedChanges)
+		symmetricDifference(&addedChanges, &deletedChanges)
 		if len(addedChanges.PrivateIPAddresses) > 0 || len(addedChanges.PublicIPAddresses) > 0 || len(addedChanges.Hostnames) > 0 {
 			output.Changes = append(output.Changes, addedChanges)
 		}
@@ -135,7 +135,7 @@ func ec2Output(event awsConfigEvent) (Output, error) {
 }
 
 // remove changes that show up as both added and deleted
-func removeDuplicates(a, b *Change) {
+func symmetricDifference(a, b *Change) {
 	aPrivate := a.PrivateIPAddresses
 	a.PrivateIPAddresses = sliceDiff(aPrivate, b.PrivateIPAddresses)
 	b.PrivateIPAddresses = sliceDiff(b.PrivateIPAddresses, aPrivate)
