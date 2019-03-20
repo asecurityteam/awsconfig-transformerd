@@ -151,7 +151,7 @@
   revision = "c67367528e160e557423e4d87059614d8c31a582"
 
 [[projects]]
-  digest = "1:9be615b2a72fc4a99e623c6776cce3afe3451741c34ea1805ea4a9b58604b9df"
+  digest = "1:772057e3c30cb5bee83fb0ff67b9255f9d9aa551f500ed85c103e68b4ed02112"
   name = "github.com/rs/zerolog"
   packages = [
     ".",
@@ -159,8 +159,8 @@
     "internal/json",
   ]
   pruneopts = "UT"
-  revision = "6d6350a51143b5c0d0a6a3b736ee2b41315f7269"
-  version = "v1.12.0"
+  revision = "651d361cfeb9d0f5b9f1d14b162c66c82509ef6d"
+  version = "v1.13.0"
 
 [[projects]]
   digest = "1:08d65904057412fc0270fc4812a1c90c594186819243160dc779a402d4b6d0bc"
@@ -187,7 +187,7 @@
   name = "golang.org/x/net"
   packages = ["context"]
   pruneopts = "UT"
-  revision = "5c2c250b6a70e39b74bb544433a348a892b10530"
+  revision = "1272bf9dcd53ea65c09668fb4c76e65deb740072"
 
 [solve-meta]
   analyzer-name = "dep"

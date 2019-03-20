@@ -54,23 +54,22 @@ paths:
           description: "Success."
       x-transportd:
         backend: app
-  /{name}:
-    get:
-      description: An API Call.
-      parameters:
-        - name: "name"
-          in: "path"
-          description: "Name of person to greet."
-          required: true
-          schema:
-            type: "string"
+  /:
+    post:
+      description: Filter AWS Config events
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigNotification'
       responses:
         "200":
           description: "Success"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Greeting'
+                $ref: '#/components/schemas/CloudAssetChanges'
       x-transportd:
         backend: app
         enabled:
@@ -80,16 +79,86 @@ paths:
           - "responsevalidation"
           - "lambda"
         lambda:
-          arn: "name_or_arn"
+          arn: "awsConfigHandler"
           async: false
-          request: '{}'
+          request: '#! json .Request.Body !#'
           success: '{"status": 200, "bodyPassthrough": true}'
           error: '{"status": 500, "bodyPassthrough": true}'
 components:
   schemas:
-    Greeting:
+    ConfigNotification:
       type: object
       properties:
-        greeting:
+        Message:
           type: string
-          description: The personal greeting.
+          description: The AWS Config diff event represented stringified JSON.
+        Timestamp:
+          type: string
+          description: The RFC3339 date time the AWS Config SNS event was sent.
+        ProcessedTimestamp:
+          type: string
+          description: The RFC3339 date time the event was filtered by awsconfig-filterd.
+        Type:
+          type: string
+          description: The AWS Config SNS message type (optional).
+        MessageId:
+          type: string
+          description: The AWS Config SNS message ID (optional).
+        TopicArn:
+          type: string
+          description: The AWS Config SNS topic ARN (optional).
+        Subject:
+          type: string
+          description: The AWS Config SNS subject (optional).
+        SignatureVersion:
+          type: string
+          description: The AWS Config SNS signature version (optional).
+        Signature:
+          type: string
+          description: The AWS Config SNS signature (optional).
+        SigningCertURL:
+          type: string
+          description: The AWS Config SNS signing cert URL (optional).
+        UnsubscribeURL:
+          type: string
+          description: The AWS Config SNS unsubscribe URL (optional).
+    CloudAssetChanges:
+      type: object
+      properties:
+        changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/CloudAssetChange'
+        changeTime:
+          type: string
+          # format: date-time https://github.com/getkin/kin-openapi/pull/74
+        resourceType:
+          type: string
+        accountId:
+          type: string
+        region:
+          type: string
+        resourceId:
+          type: string
+        tags:
+          type: object
+          additionalProperties:
+            type: string
+    CloudAssetChange:
+      type: object
+      properties:
+        privateIpAddresses:
+          type: array
+          items:
+            type: string
+        publicIpAddresses:
+          type: array
+          items:
+            type: string
+        hostnames:
+          type: array
+          items:
+            type: string
+        changeType:
+          type: string
+          enum: [ADDED, DELETED]
