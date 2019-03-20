@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"encoding/json"
+	"time"
 
 	"bitbucket.org/asecurityteam/awsconfig-transformerd/pkg/domain"
 	"bitbucket.org/asecurityteam/awsconfig-transformerd/pkg/logs"
@@ -23,6 +24,9 @@ type Input struct {
 
 	// Timestamp is the time at which the notification was published to the SNS topic
 	Timestamp string `json:"Timestamp"`
+
+	// ProcessedTimestamp is an optional field. It is the time at which a previous service emitted this event.
+	ProcessedTimestamp string `json:"ProcessedTimestamp"`
 }
 
 // Output is the result of the transformation
@@ -74,10 +78,18 @@ type Transformer struct {
 // The input is transformed into a JSON structure which highlights changes in the network details for this resource.
 // The output is the transformed JSON.
 func (t *Transformer) Handle(ctx context.Context, input Input) (Output, error) {
+
+	if input.ProcessedTimestamp != "" {
+		ts, err := time.Parse(time.RFC3339Nano, input.ProcessedTimestamp)
+		if err != nil {
+			t.StatFn(ctx).Timing("event.awsconfig.transformer.event.delay", time.Since(ts))
+		}
+	}
+
 	var event awsConfigEvent
-	e := json.Unmarshal([]byte(input.Message), &event)
-	if e != nil {
-		return Output{}, e
+	err := json.Unmarshal([]byte(input.Message), &event)
+	if err != nil {
+		return Output{}, err
 	}
 
 	switch event.ConfigurationItem.ResourceType {
