@@ -5,6 +5,7 @@ import (
 	"os"
 
 	handlers "bitbucket.org/asecurityteam/awsconfig-transformerd/pkg/handlers/v1"
+	"github.com/asecurityteam/runhttp"
 	serverfull "github.com/asecurityteam/serverfull/pkg"
 	serverfulldomain "github.com/asecurityteam/serverfull/pkg/domain"
 	"github.com/asecurityteam/settings"
@@ -14,8 +15,13 @@ import (
 func main() {
 	ctx := context.Background()
 
+	transformer := &handlers.Transformer{
+		LogFn:  runhttp.LoggerFromContext,
+		StatFn: runhttp.StatFromContext,
+	}
+
 	handlersMap := map[string]serverfulldomain.Handler{
-		"awsConfigHandler": lambda.NewHandler(handlers.Handle),
+		"awsConfigHandler": lambda.NewHandler(transformer.Handle),
 	}
 
 	source, err := settings.NewEnvSource(os.Environ())

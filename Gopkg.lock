@@ -42,14 +42,6 @@
   revision = "d4142d59861b3779aeba32111096d43ae940e49d"
 
 [[projects]]
-  digest = "1:067d27a5520b7ab98a652f32b33785de2ffc7028e50c722c993e7ee218046a30"
-  name = "github.com/asecurityteam/transport"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "b848ebf618ee2a8131b88126469b693aa035457f"
-  version = "1.1.2"
-
-[[projects]]
   digest = "1:fc53fe55ee530de09a7593d102a4aae9df3fa085abeb9fbd41becc6d56e335f2"
   name = "github.com/aws/aws-lambda-go"
   packages = [
@@ -61,6 +53,33 @@
   pruneopts = "UT"
   revision = "c83699c938a36c6d111f9837be9295184efeeb2e"
   version = "v1.9.0"
+
+[[projects]]
+  digest = "1:08c02fa8ea05a9aec08059ba009603c0d41fa4c4eac867be0ebe009275bbda6d"
+  name = "github.com/aws/aws-sdk-go"
+  packages = [
+    "aws",
+    "aws/awserr",
+    "aws/awsutil",
+    "aws/client",
+    "aws/client/metadata",
+    "aws/credentials",
+    "aws/endpoints",
+    "aws/request",
+    "aws/signer/v4",
+    "internal/ini",
+    "internal/sdkio",
+    "internal/sdkrand",
+    "internal/shareddefaults",
+    "private/protocol",
+    "private/protocol/json/jsonutil",
+    "private/protocol/jsonrpc",
+    "private/protocol/rest",
+    "service/configservice",
+  ]
+  pruneopts = "UT"
+  revision = "f9b35e02297c8fcca7a55dd30ed8d4e9dc64f5a3"
+  version = "v1.18.5"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -98,16 +117,11 @@
   version = "v2.2.2"
 
 [[projects]]
-  digest = "1:552a143cfb2692a4a8cbae568a9b4633ec4e7ce9269cfe74c07ea08ce50d866f"
-  name = "github.com/golang/mock"
-  packages = [
-    "gomock",
-    "mockgen",
-    "mockgen/model",
-  ]
+  digest = "1:bb81097a5b62634f3e9fec1014657855610c82d19b9a40c17612e32651e35dca"
+  name = "github.com/jmespath/go-jmespath"
+  packages = ["."]
   pruneopts = "UT"
-  revision = "51421b967af1f557f93a59e0057aaf15ca02e29c"
-  version = "v1.2.0"
+  revision = "c2b33e84"
 
 [[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
@@ -157,9 +171,12 @@
   version = "v1.3.0"
 
 [[projects]]
-  digest = "1:972c2427413d41a1e06ca4897e8528e5a1622894050e2f527b38ddf0f343f759"
+  digest = "1:5da8ce674952566deae4dbc23d07c85caafc6cfa815b0b3e03e41979cedb8750"
   name = "github.com/stretchr/testify"
-  packages = ["assert"]
+  packages = [
+    "assert",
+    "require",
+  ]
   pruneopts = "UT"
   revision = "ffdc059bfe9ce6a4e144ba849dbedead332c6053"
   version = "v1.3.0"
@@ -176,15 +193,15 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/asecurityteam/logevent",
     "github.com/asecurityteam/runhttp",
     "github.com/asecurityteam/serverfull/pkg",
     "github.com/asecurityteam/serverfull/pkg/domain",
     "github.com/asecurityteam/settings",
-    "github.com/asecurityteam/transport",
     "github.com/aws/aws-lambda-go/lambda",
-    "github.com/golang/mock/gomock",
-    "github.com/golang/mock/mockgen",
+    "github.com/aws/aws-sdk-go/service/configservice",
     "github.com/stretchr/testify/assert",
+    "github.com/stretchr/testify/require",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

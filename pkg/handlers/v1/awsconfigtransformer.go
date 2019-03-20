@@ -83,14 +83,13 @@ func (t *Transformer) Handle(ctx context.Context, input Input) (Output, error) {
 		return Output{}, e
 	}
 
-	var output Output
-
 	switch event.ConfigurationItem.ResourceType {
 	case configservice.ResourceTypeAwsEc2Instance:
-		output, _ = ec2Output(event)
+		return ec2Output(event)
 	default:
 		t.LogFn(ctx).Info(logs.UnsupportedResource{Resource: event.ConfigurationItem.ResourceType})
 	}
 
-	return output, nil
+	// if there is nothing to transform, return an empty output
+	return Output{}, nil
 }

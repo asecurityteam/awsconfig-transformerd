@@ -1,15 +1,15 @@
 package v1
 
 import (
-	"bitbucket.org/asecurityteam/awsconfig-transformerd/pkg/domain"
 	"context"
 	"encoding/json"
-	"github.com/asecurityteam/logevent"
 	"io/ioutil"
 	"path/filepath"
 	"reflect"
 	"testing"
 
+	"bitbucket.org/asecurityteam/awsconfig-transformerd/pkg/domain"
+	"github.com/asecurityteam/logevent"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -18,23 +18,23 @@ func TestAWSConfigEventMarshalling(t *testing.T) {
 
 	const filename = "awsconfigpayload.json"
 
-	str, err := ioutil.ReadFile(filepath.Join("testdata", filename))
+	data, err := ioutil.ReadFile(filepath.Join("testdata", filename))
 	if err != nil {
 		t.Fatalf("failed to read file '%s': %s", filename, err)
 	}
 
 	// if you want to see the raw string:
-	// fmt.Println(string(str))
+	// fmt.Println(string(data))
 
 	res := awsConfigEvent{}
-	json.Unmarshal(str, &res)
+	_ = json.Unmarshal(data, &res)
 
 	assert.NotNil(t, res.ConfigurationItemDiff.ChangedProperties, "marshalling should have resulted in non-nil value")
-	marshalled, _ := json.MarshalIndent(res, "", "    ")
+	marshaled, _ := json.MarshalIndent(res, "", "    ")
 	// if you want to see it:
-	// fmt.Println(string(marshalled))
+	// fmt.Println(string(marshaled))
 
-	jsonEquals, _ := jsonBytesEqual([]byte(str), marshalled)
+	jsonEquals, _ := jsonBytesEqual(data, marshaled)
 
 	assert.True(t, jsonEquals, "expect exact JSON equality before marshall/unmarshal and after.  "+
 		"If they're not, it's probably because your JSON key does not match the field name "+
@@ -48,8 +48,9 @@ func TestTransformEmptiness(t *testing.T) {
 	transformer := &Transformer{LogFn: func(_ context.Context) domain.Logger {
 		return logevent.New(logevent.Config{Output: ioutil.Discard})
 	}}
-	_, err := transformer.Handle(context.Background(), Input{Message: string(marshalled)})
+	output, err := transformer.Handle(context.Background(), Input{Message: string(marshalled)})
 	assert.Nil(t, err, "expected non-nil")
+	assert.Equal(t, 0, len(output.Changes))
 }
 
 func TestTransformInvalidJSON(t *testing.T) {
@@ -63,6 +64,7 @@ func TestTransformEC2(t *testing.T) {
 		Name           string
 		InputFile      string
 		ExpectedOutput Output
+		ExpectError    bool
 	}{
 		{
 			Name:      "ec2-created",
@@ -177,6 +179,11 @@ func TestTransformEC2(t *testing.T) {
 				},
 			},
 		},
+		{
+			Name:        "ec2-malformed-configuration",
+			InputFile:   "ec2.malformed.json",
+			ExpectError: true,
+		},
 	}
 
 	for _, tt := range tc {
@@ -191,7 +198,11 @@ func TestTransformEC2(t *testing.T) {
 
 			transformer := &Transformer{}
 			output, err := transformer.Handle(context.Background(), input)
-			require.Nil(t, err)
+			if tt.ExpectError {
+				require.NotNil(t, err)
+			} else {
+				require.Nil(t, err)
+			}
 
 			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
 			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)

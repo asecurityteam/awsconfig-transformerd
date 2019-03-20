@@ -131,6 +131,7 @@ func ec2Output(event awsConfigEvent) (Output, error) {
 	return output, nil
 }
 
+// remove changes that show up as both added and deleted
 func removeDuplicates(a, b *Change) {
 	aPrivate := a.PrivateIPAddresses
 	a.PrivateIPAddresses = sliceDiff(aPrivate, b.PrivateIPAddresses)
