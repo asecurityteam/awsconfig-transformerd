@@ -1,6 +1,6 @@
 FROM asecurityteam/sdcli:v1 AS BUILDER
-RUN mkdir -p /go/src/bitbucket.org/asecurityteam/awsconfig-transformerd
-WORKDIR /go/src/bitbucket.org/asecurityteam/awsconfig-transformerd
+RUN mkdir -p /go/src/github.com/asecurityteam/awsconfig-transformerd
+WORKDIR /go/src/github.com/asecurityteam/awsconfig-transformerd
 COPY --chown=sdcli:sdcli . .
 RUN sdcli go dep
 RUN CGO_ENABLED=0 GOOS=linux go build -a -o /opt/app main.go

@@ -4,17 +4,16 @@ version of the Config change
 
 <https://github.com/asecurityteam/awsconfig-transformer>
 
-- [AWSConfig Transformer - description](#AWSConfig Transformer)
-    - [Overview](#overview)
-    - [Quick Start](#quick-start)
-    - [Configuration](#configuration)
-    - [Supported Resources](#supported-resources)
-    - [Status](#status)
-    - [Contributing](#contributing)
-        - [Building And Testing](#building-and-testing)
-        - [Quality Gates](#quality-gates)
-        - [License](#license)
-        - [Contributing Agreement](#contributing-agreement)
+  - [Overview](#overview)
+  - [Quick Start](#quick-start)
+  - [Configuration](#configuration)
+  - [Supported Resources](#supported-resources)
+  - [Status](#status)
+  - [Contributing](#contributing)
+      - [Building And Testing](#building-and-testing)
+      - [Quality Gates](#quality-gates)
+      - [License](#license)
+      - [Contributing Agreement](#contributing-agreement)
 
 <!-- /TOC -->
 

@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"testing"
 
-	"bitbucket.org/asecurityteam/awsconfig-transformerd/pkg/domain"
+	"github.com/asecurityteam/awsconfig-transformerd/pkg/domain"
 	"github.com/asecurityteam/logevent"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/stretchr/testify/assert"
