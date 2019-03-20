@@ -60,7 +60,10 @@ type configurationDiff struct {
 }
 
 func ec2Output(event awsConfigEvent) (Output, error) {
-	output := getBaseOutput(event.ConfigurationItem)
+	output, err := getBaseOutput(event.ConfigurationItem)
+	if err != nil {
+		return Output{}, err
+	}
 	switch event.ConfigurationItemDiff.ChangeType {
 	case create:
 		// if a resource is created for the first time, there is no diff.
@@ -74,7 +77,7 @@ func ec2Output(event awsConfigEvent) (Output, error) {
 		output.Changes = append(output.Changes, change)
 	case update:
 		addedChanges := Change{ChangeType: added}
-		removedChanges := Change{ChangeType: deleted}
+		deletedChanges := Change{ChangeType: deleted}
 		// If an update was detected, check to see if any changes to the NetworkInterfaces occurred
 		for k, v := range event.ConfigurationItemDiff.ChangedProperties {
 			if !strings.HasPrefix(k, "Configuration.NetworkInterfaces.") {
@@ -88,7 +91,7 @@ func ec2Output(event awsConfigEvent) (Output, error) {
 			changes := &addedChanges
 			if diff.ChangeType == delete {
 				ni = diff.PreviousValue
-				changes = &removedChanges
+				changes = &deletedChanges
 			}
 			private, public, dns := extractNetworkInterfaceInfo(ni)
 			changes.PrivateIPAddresses = append(changes.PrivateIPAddresses, private...)
@@ -98,12 +101,12 @@ func ec2Output(event awsConfigEvent) (Output, error) {
 
 		// We need to dedup across the sets of changes to reduce redundancy.
 		// i.e. remove entries that show up as both added and removed
-		removeDuplicates(&addedChanges, &removedChanges)
+		removeDuplicates(&addedChanges, &deletedChanges)
 		if len(addedChanges.PrivateIPAddresses) > 0 || len(addedChanges.PublicIPAddresses) > 0 || len(addedChanges.Hostnames) > 0 {
 			output.Changes = append(output.Changes, addedChanges)
 		}
-		if len(removedChanges.PrivateIPAddresses) > 0 || len(removedChanges.PublicIPAddresses) > 0 || len(removedChanges.Hostnames) > 0 {
-			output.Changes = append(output.Changes, removedChanges)
+		if len(deletedChanges.PrivateIPAddresses) > 0 || len(deletedChanges.PublicIPAddresses) > 0 || len(deletedChanges.Hostnames) > 0 {
+			output.Changes = append(output.Changes, deletedChanges)
 		}
 	case delete:
 		// if a resource is deleted, the tags are no longer present in the base object.

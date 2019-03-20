@@ -10,10 +10,7 @@ import (
 )
 
 const (
-	create = "CREATE"
-	delete = "DELETE"
-	update = "UPDATE"
-
+	// change types for converted output
 	added   = "ADDED"
 	deleted = "DELETED"
 )

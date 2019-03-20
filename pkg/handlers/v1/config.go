@@ -2,6 +2,14 @@ package v1
 
 import (
 	"encoding/json"
+	"errors"
+)
+
+const (
+	// AWS Config change types
+	create = "CREATE"
+	delete = "DELETE"
+	update = "UPDATE"
 )
 
 type configurationItemDiff struct {
@@ -45,7 +53,25 @@ type relationship struct {
 	Name         string      `json:"name"`
 }
 
-func getBaseOutput(c configurationItem) Output {
+func getBaseOutput(c configurationItem) (Output, error) {
+	if c.AWSAccountID == "" {
+		return Output{}, errors.New("no aws account ID was provided")
+	}
+	if c.AWSRegion == "" {
+		return Output{}, errors.New("no aws region was provided")
+	}
+	if c.ConfigurationItemCaptureTime == "" {
+		return Output{}, errors.New("no config capture time was provided")
+	}
+	if c.ResourceID == "" {
+		return Output{}, errors.New("no aws resource ID was provided")
+	}
+	if c.ResourceType == "" {
+		return Output{}, errors.New("no aws resource type was provided")
+	}
+	if c.Tags == nil {
+		return Output{}, errors.New("tags were empty")
+	}
 	return Output{
 		AccountID:    c.AWSAccountID,
 		ChangeTime:   c.ConfigurationItemCaptureTime,
@@ -53,5 +79,5 @@ func getBaseOutput(c configurationItem) Output {
 		ResourceID:   c.ResourceID,
 		ResourceType: c.ResourceType,
 		Tags:         c.Tags,
-	}
+	}, nil
 }
