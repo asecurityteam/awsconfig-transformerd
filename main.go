@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	handlers "bitbucket.org/asecurityteam/awsconfig-transformerd/pkg/handlers/v1"
+	handlers "github.com/asecurityteam/awsconfig-transformerd/pkg/handlers/v1"
 	"github.com/asecurityteam/runhttp"
 	serverfull "github.com/asecurityteam/serverfull/pkg"
 	serverfulldomain "github.com/asecurityteam/serverfull/pkg/domain"

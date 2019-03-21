@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"bitbucket.org/asecurityteam/awsconfig-transformerd/pkg/domain"
-	"bitbucket.org/asecurityteam/awsconfig-transformerd/pkg/logs"
+	"github.com/asecurityteam/awsconfig-transformerd/pkg/domain"
+	"github.com/asecurityteam/awsconfig-transformerd/pkg/logs"
 	"github.com/aws/aws-sdk-go/service/configservice"
 )
 
