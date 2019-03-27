@@ -17,10 +17,12 @@ type ec2Configuration struct {
 	InstanceType          string             `json:"instanceType"`
 	LaunchTime            time.Time          `json:"launchTime"`
 	NetworkInterfaces     []networkInterface `json:"networkInterfaces"`
-	Tags                  []struct {
-		Key   string `json:"key"`
-		Value string `json:"value"`
-	} `json:"tags"`
+	Tags                  []tag              `json:"tags"`
+}
+
+type tag struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
 
 type networkInterface struct {
@@ -53,7 +55,7 @@ type networkInterfaceDiff struct {
 	ChangeType    string            `json:"changeType"`
 }
 
-type configurationDiff struct {
+type ec2ConfigurationDiff struct {
 	PreviousValue *ec2Configuration `json:"previousValue"`
 	UpdatedValue  *ec2Configuration `json:"updatedValue"`
 	ChangeType    string            `json:"changeType"`
@@ -66,6 +68,9 @@ func ec2Output(event awsConfigEvent) (Output, error) {
 	}
 	switch event.ConfigurationItemDiff.ChangeType {
 	case create:
+		if len(output.Tags) == 0 {
+			return Output{}, ErrMissingValue{Field: "Tags"}
+		}
 		// if a resource is created for the first time, there is no diff.
 		// just read the configuration
 		var config ec2Configuration
@@ -76,8 +81,11 @@ func ec2Output(event awsConfigEvent) (Output, error) {
 		change.ChangeType = added
 		output.Changes = append(output.Changes, change)
 	case update:
-		addedChanges := Change{ChangeType: added}
-		deletedChanges := Change{ChangeType: deleted}
+		if len(output.Tags) == 0 {
+			return Output{}, ErrMissingValue{Field: "Tags"}
+		}
+		addedChange := Change{ChangeType: added}
+		deletedChange := Change{ChangeType: deleted}
 		// If an update was detected, check to see if any changes to the NetworkInterfaces occurred
 		for k, v := range event.ConfigurationItemDiff.ChangedProperties {
 			if !strings.HasPrefix(k, "Configuration.NetworkInterfaces.") {
@@ -88,10 +96,10 @@ func ec2Output(event awsConfigEvent) (Output, error) {
 				return Output{}, err
 			}
 			ni := diff.UpdatedValue
-			changes := &addedChanges
+			changes := &addedChange
 			if diff.ChangeType == delete {
 				ni = diff.PreviousValue
-				changes = &deletedChanges
+				changes = &deletedChange
 			}
 			private, public, dns := extractNetworkInterfaceInfo(ni)
 			changes.PrivateIPAddresses = append(changes.PrivateIPAddresses, private...)
@@ -101,12 +109,12 @@ func ec2Output(event awsConfigEvent) (Output, error) {
 
 		// We need to compute the symmetric difference of the added changes and the removed changes
 		// i.e. remove entries that show up as both added and removed
-		symmetricDifference(&addedChanges, &deletedChanges)
-		if len(addedChanges.PrivateIPAddresses) > 0 || len(addedChanges.PublicIPAddresses) > 0 || len(addedChanges.Hostnames) > 0 {
-			output.Changes = append(output.Changes, addedChanges)
+		symmetricDifference(&addedChange, &deletedChange)
+		if len(addedChange.PrivateIPAddresses) > 0 || len(addedChange.PublicIPAddresses) > 0 || len(addedChange.Hostnames) > 0 {
+			output.Changes = append(output.Changes, addedChange)
 		}
-		if len(deletedChanges.PrivateIPAddresses) > 0 || len(deletedChanges.PublicIPAddresses) > 0 || len(deletedChanges.Hostnames) > 0 {
-			output.Changes = append(output.Changes, deletedChanges)
+		if len(deletedChange.PrivateIPAddresses) > 0 || len(deletedChange.PublicIPAddresses) > 0 || len(deletedChange.Hostnames) > 0 {
+			output.Changes = append(output.Changes, deletedChange)
 		}
 	case delete:
 		// if a resource is deleted, the tags are no longer present in the base object.
@@ -116,9 +124,12 @@ func ec2Output(event awsConfigEvent) (Output, error) {
 		if !ok {
 			return Output{}, errors.New("Invalid configuration diff")
 		}
-		var configDiff configurationDiff
+		var configDiff ec2ConfigurationDiff
 		if err := json.Unmarshal(configDiffRaw, &configDiff); err != nil {
 			return Output{}, err
+		}
+		if configDiff.PreviousValue.Tags == nil || len(configDiff.PreviousValue.Tags) == 0 {
+			return Output{}, ErrMissingValue{Field: "Tags"}
 		}
 		for _, tag := range configDiff.PreviousValue.Tags {
 			output.Tags[tag.Key] = tag.Value

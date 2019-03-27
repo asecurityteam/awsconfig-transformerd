@@ -10,6 +10,7 @@ import (
 
 	"github.com/asecurityteam/awsconfig-transformerd/pkg/domain"
 	"github.com/asecurityteam/logevent"
+	"github.com/asecurityteam/runhttp"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -130,7 +131,7 @@ func TestMissingRequiredFields(t *testing.T) {
 				ConfigurationItemCaptureTime: "2019-02-22T20:19:20.543Z",
 				ResourceID:                   "abc1234",
 				ResourceType:                 configservice.ResourceTypeAwsEc2Instance,
-				Tags:                         make(map[string]string),
+				Tags:                         map[string]string{"foo": "bar"},
 			},
 			ExpectedError: false,
 		},
@@ -286,7 +287,7 @@ func TestTransformEC2(t *testing.T) {
 			err = json.Unmarshal(data, &input)
 			require.Nil(t, err)
 
-			transformer := &Transformer{}
+			transformer := &Transformer{StatFn: runhttp.StatFromContext}
 			output, err := transformer.Handle(context.Background(), input)
 			if tt.ExpectError {
 				require.NotNil(t, err)

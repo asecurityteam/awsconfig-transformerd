@@ -80,8 +80,7 @@ type Transformer struct {
 func (t *Transformer) Handle(ctx context.Context, input Input) (Output, error) {
 
 	if input.ProcessedTimestamp != "" {
-		ts, err := time.Parse(time.RFC3339Nano, input.ProcessedTimestamp)
-		if err != nil {
+		if ts, err := time.Parse(time.RFC3339Nano, input.ProcessedTimestamp); err == nil {
 			t.StatFn(ctx).Timing("event.awsconfig.transformer.event.delay", time.Since(ts))
 		}
 	}
@@ -95,6 +94,11 @@ func (t *Transformer) Handle(ctx context.Context, input Input) (Output, error) {
 	switch event.ConfigurationItem.ResourceType {
 	case configservice.ResourceTypeAwsEc2Instance:
 		return ec2Output(event)
+	case configservice.ResourceTypeAwsElasticLoadBalancingLoadBalancer:
+		return elbOutput(event)
+	case configservice.ResourceTypeAwsElasticLoadBalancingV2LoadBalancer:
+		// ALB Config events have the same as ELBs
+		return elbOutput(event)
 	default:
 		t.LogFn(ctx).Info(logs.UnsupportedResource{Resource: event.ConfigurationItem.ResourceType})
 	}

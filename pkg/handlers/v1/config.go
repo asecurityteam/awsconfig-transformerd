@@ -2,7 +2,6 @@ package v1
 
 import (
 	"encoding/json"
-	"errors"
 )
 
 const (
@@ -18,24 +17,24 @@ type configurationItemDiff struct {
 }
 
 type configurationItem struct {
-	Configuration                json.RawMessage   `json:"configuration"`
-	RelatedEvents                []string          `json:"relatedEvents"`
-	Relationships                []relationship    `json:"relationships"`
-	SupplementaryConfiguration   map[string]string `json:"supplementaryConfiguration"`
-	Tags                         map[string]string `json:"tags"`
-	ConfigurationItemVersion     string            `json:"configurationItemVersion"`
-	ConfigurationItemCaptureTime string            `json:"configurationItemCaptureTime"`
-	ConfigurationStateID         int64             `json:"configurationStateId"`
-	AWSAccountID                 string            `json:"awsAccountId"`
-	ConfigurationItemStatus      string            `json:"configurationItemStatus"`
-	ResourceType                 string            `json:"resourceType"`
-	ResourceID                   string            `json:"resourceId"`
-	ResourceName                 interface{}       `json:"resourceName"`
-	ARN                          string            `json:"ARN"`
-	AWSRegion                    string            `json:"awsRegion"`
-	AvailabilityZone             string            `json:"availabilityZone"`
-	ConfigurationStateMd5Hash    string            `json:"configurationStateMd5Hash"`
-	ResourceCreationTime         string            `json:"resourceCreationTime"`
+	Configuration                json.RawMessage        `json:"configuration"`
+	RelatedEvents                []string               `json:"relatedEvents"`
+	Relationships                []relationship         `json:"relationships"`
+	SupplementaryConfiguration   map[string]interface{} `json:"supplementaryConfiguration"`
+	Tags                         map[string]string      `json:"tags"`
+	ConfigurationItemVersion     string                 `json:"configurationItemVersion"`
+	ConfigurationItemCaptureTime string                 `json:"configurationItemCaptureTime"`
+	ConfigurationStateID         int64                  `json:"configurationStateId"`
+	AWSAccountID                 string                 `json:"awsAccountId"`
+	ConfigurationItemStatus      string                 `json:"configurationItemStatus"`
+	ResourceType                 string                 `json:"resourceType"`
+	ResourceID                   string                 `json:"resourceId"`
+	ResourceName                 interface{}            `json:"resourceName"`
+	ARN                          string                 `json:"ARN"`
+	AWSRegion                    string                 `json:"awsRegion"`
+	AvailabilityZone             string                 `json:"availabilityZone"`
+	ConfigurationStateMd5Hash    string                 `json:"configurationStateMd5Hash"`
+	ResourceCreationTime         string                 `json:"resourceCreationTime"`
 }
 
 type awsConfigEvent struct {
@@ -55,22 +54,22 @@ type relationship struct {
 
 func getBaseOutput(c configurationItem) (Output, error) {
 	if c.AWSAccountID == "" {
-		return Output{}, errors.New("no aws account ID was provided")
+		return Output{}, ErrMissingValue{Field: "AWSAccountID"}
 	}
 	if c.AWSRegion == "" {
-		return Output{}, errors.New("no aws region was provided")
+		return Output{}, ErrMissingValue{Field: "AWSRegion"}
 	}
 	if c.ConfigurationItemCaptureTime == "" {
-		return Output{}, errors.New("no config capture time was provided")
+		return Output{}, ErrMissingValue{Field: "ConfigurationItemCaptureTime"}
 	}
 	if c.ResourceID == "" {
-		return Output{}, errors.New("no aws resource ID was provided")
+		return Output{}, ErrMissingValue{Field: "ResourceID"}
 	}
 	if c.ResourceType == "" {
-		return Output{}, errors.New("no aws resource type was provided")
+		return Output{}, ErrMissingValue{Field: "ResourceType"}
 	}
 	if c.Tags == nil {
-		return Output{}, errors.New("tags were empty")
+		return Output{}, ErrMissingValue{Field: "Tags"}
 	}
 	return Output{
 		AccountID:    c.AWSAccountID,
