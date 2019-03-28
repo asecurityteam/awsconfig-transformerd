@@ -91,16 +91,48 @@ func (t *Transformer) Handle(ctx context.Context, input Input) (Output, error) {
 
 	switch event.ConfigurationItem.ResourceType {
 	case configservice.ResourceTypeAwsEc2Instance:
-		return ec2Output(event)
+		return transformOutput(event, ec2Transformer{})
 	case configservice.ResourceTypeAwsElasticLoadBalancingLoadBalancer:
-		return elbOutput(event)
+		return transformOutput(event, elbTransformer{})
 	case configservice.ResourceTypeAwsElasticLoadBalancingV2LoadBalancer:
 		// ALB Config events have the same as ELBs
-		return elbOutput(event)
+		return transformOutput(event, elbTransformer{})
 	default:
 		t.LogFn(ctx).Info(logs.UnsupportedResource{Resource: event.ConfigurationItem.ResourceType})
 	}
 
 	// if there is nothing to transform, return an empty output
+	return Output{}, nil
+}
+
+// ResourceTransformer takes AWS Config Events, and returns transformed
+// output.
+type ResourceTransformer interface {
+	Create(event awsConfigEvent) (Output, error)
+	Update(event awsConfigEvent) (Output, error)
+	Delete(event awsConfigEvent) (Output, error)
+}
+
+func transformOutput(event awsConfigEvent, resourceTransformer ResourceTransformer) (Output, error) {
+	switch event.ConfigurationItemDiff.ChangeType {
+	case create:
+		output, err := resourceTransformer.Create(event)
+		if err != nil {
+			return Output{}, err
+		}
+		return output, nil
+	case update:
+		output, err := resourceTransformer.Update(event)
+		if err != nil {
+			return Output{}, err
+		}
+		return output, nil
+	case delete:
+		output, err := resourceTransformer.Delete(event)
+		if err != nil {
+			return Output{}, err
+		}
+		return output, nil
+	}
 	return Output{}, nil
 }

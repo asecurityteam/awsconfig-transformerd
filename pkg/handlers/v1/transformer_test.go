@@ -11,7 +11,6 @@ import (
 	"github.com/asecurityteam/awsconfig-transformerd/pkg/domain"
 	"github.com/asecurityteam/logevent"
 	"github.com/asecurityteam/runhttp"
-	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -49,105 +48,6 @@ func TestTransformInvalidJSON(t *testing.T) {
 	transformer := &Transformer{}
 	_, err := transformer.Handle(context.Background(), Input{Message: "not json"})
 	assert.NotNil(t, err, "expected non-nil")
-}
-
-func TestMissingRequiredFields(t *testing.T) {
-	tc := []struct {
-		Name          string
-		ConfigItem    configurationItem
-		ExpectedError bool
-	}{
-		{
-			Name: "missing-accountID",
-			ConfigItem: configurationItem{
-				AWSAccountID:                 "",
-				AWSRegion:                    "us-west-2",
-				ConfigurationItemCaptureTime: "2019-02-22T20:19:20.543Z",
-				ResourceID:                   "abc1234",
-				ResourceType:                 configservice.ResourceTypeAwsEc2Instance,
-			},
-			ExpectedError: true,
-		},
-		{
-			Name: "missing-region",
-			ConfigItem: configurationItem{
-				AWSAccountID:                 "0123456789012",
-				AWSRegion:                    "",
-				ConfigurationItemCaptureTime: "2019-02-22T20:19:20.543Z",
-				ResourceID:                   "abc1234",
-				ResourceType:                 configservice.ResourceTypeAwsEc2Instance,
-			},
-			ExpectedError: true,
-		},
-		{
-			Name: "missing-time",
-			ConfigItem: configurationItem{
-				AWSAccountID:                 "0123456789012",
-				AWSRegion:                    "us-west-2",
-				ConfigurationItemCaptureTime: "",
-				ResourceID:                   "abc1234",
-				ResourceType:                 configservice.ResourceTypeAwsEc2Instance,
-			},
-			ExpectedError: true,
-		},
-		{
-			Name: "missing-resourceID",
-			ConfigItem: configurationItem{
-				AWSAccountID:                 "0123456789012",
-				AWSRegion:                    "us-west-2",
-				ConfigurationItemCaptureTime: "2019-02-22T20:19:20.543Z",
-				ResourceID:                   "",
-				ResourceType:                 configservice.ResourceTypeAwsEc2Instance,
-			},
-			ExpectedError: true,
-		},
-		{
-			Name: "missing-resource-type",
-			ConfigItem: configurationItem{
-				AWSAccountID:                 "0123456789012",
-				AWSRegion:                    "us-west-2",
-				ConfigurationItemCaptureTime: "2019-02-22T20:19:20.543Z",
-				ResourceID:                   "abc1234",
-				ResourceType:                 "",
-			},
-			ExpectedError: true,
-		},
-		{
-			Name: "empty tags",
-			ConfigItem: configurationItem{
-				AWSAccountID:                 "0123456789012",
-				AWSRegion:                    "us-west-2",
-				ConfigurationItemCaptureTime: "2019-02-22T20:19:20.543Z",
-				ResourceID:                   "abc1234",
-				ResourceType:                 configservice.ResourceTypeAwsEc2Instance,
-			},
-			ExpectedError: true,
-		},
-		{
-			Name: "valid",
-			ConfigItem: configurationItem{
-				AWSAccountID:                 "0123456789012",
-				AWSRegion:                    "us-west-2",
-				ConfigurationItemCaptureTime: "2019-02-22T20:19:20.543Z",
-				ResourceID:                   "abc1234",
-				ResourceType:                 configservice.ResourceTypeAwsEc2Instance,
-				Tags:                         map[string]string{"foo": "bar"},
-			},
-			ExpectedError: false,
-		},
-	}
-
-	for _, tt := range tc {
-		tt := tt
-		t.Run(tt.Name, func(t *testing.T) {
-			_, err := getBaseOutput(tt.ConfigItem)
-			if tt.ExpectedError {
-				require.NotNil(t, err)
-				return
-			}
-			require.Nil(t, err)
-		})
-	}
 }
 
 func TestTransformEC2(t *testing.T) {
