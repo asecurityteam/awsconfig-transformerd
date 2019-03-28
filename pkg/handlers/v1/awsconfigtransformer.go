@@ -79,10 +79,8 @@ type Transformer struct {
 // The output is the transformed JSON.
 func (t *Transformer) Handle(ctx context.Context, input Input) (Output, error) {
 
-	if input.ProcessedTimestamp != "" {
-		if ts, err := time.Parse(time.RFC3339Nano, input.ProcessedTimestamp); err == nil {
-			t.StatFn(ctx).Timing("event.awsconfig.transformer.event.delay", time.Since(ts))
-		}
+	if ts, err := time.Parse(time.RFC3339Nano, input.ProcessedTimestamp); err == nil {
+		t.StatFn(ctx).Timing("event.awsconfig.transformer.event.delay", time.Since(ts))
 	}
 
 	var event awsConfigEvent
