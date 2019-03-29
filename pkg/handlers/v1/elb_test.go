@@ -149,7 +149,7 @@ func TestTransformELB(t *testing.T) {
 			err = json.Unmarshal(data, &input)
 			require.Nil(t, err)
 
-			transformer := &Transformer{}
+			transformer := &Transformer{LogFn: logFn}
 			output, err := transformer.Handle(context.Background(), input)
 			if tt.ExpectError {
 				require.NotNil(t, err)
