@@ -55,7 +55,7 @@
   version = "v1.10.0"
 
 [[projects]]
-  digest = "1:e85d2d5e08b530d6df8b0afe2f312d1f50789b4e9db3619040c3990022d6e02b"
+  digest = "1:b8c7da76d9acd75a9d268c4eea0a2f26d8a0bf53c4e3fc3f4cfce11ddfee2a6b"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -78,8 +78,8 @@
     "service/configservice",
   ]
   pruneopts = "UT"
-  revision = "9000241da407010f1e20c6dcbf00d0cbc9255ff9"
-  version = "v1.19.4"
+  revision = "d56356f29f4878db5a31b68eb8bb8c5383f6ff48"
+  version = "v1.19.6"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -187,7 +187,7 @@
   name = "golang.org/x/net"
   packages = ["context"]
   pruneopts = "UT"
-  revision = "63eda1eb0650888965ead1296efd04d0b2b61128"
+  revision = "74de082e2cca95839e88aa0aeee5aadf6ce7710f"
 
 [solve-meta]
   analyzer-name = "dep"

@@ -15,6 +15,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func logFn(_ context.Context) domain.Logger {
+	return logevent.New(logevent.Config{Output: ioutil.Discard})
+}
+
 func TestAWSConfigEventMarshalling(t *testing.T) {
 
 	const filename = "awsconfigpayload.json"
@@ -36,16 +40,14 @@ func TestAWSConfigEventMarshalling(t *testing.T) {
 func TestTransformEmptiness(t *testing.T) {
 	event := awsConfigEvent{}
 	marshalled, _ := json.Marshal(event)
-	transformer := &Transformer{LogFn: func(_ context.Context) domain.Logger {
-		return logevent.New(logevent.Config{Output: ioutil.Discard})
-	}}
+	transformer := &Transformer{LogFn: logFn}
 	output, err := transformer.Handle(context.Background(), Input{Message: string(marshalled)})
 	assert.Nil(t, err, "expected non-nil")
 	assert.Equal(t, 0, len(output.Changes))
 }
 
 func TestTransformInvalidJSON(t *testing.T) {
-	transformer := &Transformer{}
+	transformer := &Transformer{LogFn: logFn}
 	_, err := transformer.Handle(context.Background(), Input{Message: "not json"})
 	assert.NotNil(t, err, "expected non-nil")
 }
@@ -187,7 +189,7 @@ func TestTransformEC2(t *testing.T) {
 			err = json.Unmarshal(data, &input)
 			require.Nil(t, err)
 
-			transformer := &Transformer{StatFn: runhttp.StatFromContext}
+			transformer := &Transformer{StatFn: runhttp.StatFromContext, LogFn: logFn}
 			output, err := transformer.Handle(context.Background(), input)
 			if tt.ExpectError {
 				require.NotNil(t, err)
