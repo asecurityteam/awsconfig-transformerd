@@ -56,13 +56,13 @@ type Output struct {
 // Change details network related changes for a resource
 type Change struct {
 	// PublicIPAddresses show changed public IP addresses
-	PublicIPAddresses []string `json:"publicIpAddresses"`
+	PublicIPAddresses []string `json:"publicIpAddresses,omitempty"`
 
 	// PrivateIPAddresses show changed private IP addresses
-	PrivateIPAddresses []string `json:"privateIpAddresses"`
+	PrivateIPAddresses []string `json:"privateIpAddresses,omitempty"`
 
 	// Hostnames show changed public DNS names
-	Hostnames []string `json:"hostnames"`
+	Hostnames []string `json:"hostnames,omitempty"`
 
 	// ChangeType indicates the type of change which occurred. Allowed values are "ADDED" or "DELETED"
 	ChangeType string `json:"changeType"`
