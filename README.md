@@ -1,6 +1,5 @@
 <a id="markdown-AWSConfig Transformer" name="AWSConfig Transformer"></a>
-# AWS Config Transformer - a lambda handler that receives AWS Config changes and returns a transformed
-version of the Config change
+# AWS Config Transformer - a lambda handler that receives AWS Config changes and returns a transformed version of the Config change
 
 <https://github.com/asecurityteam/awsconfig-transformer>
 
@@ -121,12 +120,35 @@ following JSON specification:
 <a id="markdown-quick-start" name="quick-start"></a>
 ## Quick Start
 
-<Hello world style example.>
+### Pre-requisite
+
+* Install docker and docker-compose.
+* Read up on [serverfull](https://github.com/asecurityteam/serverfull)
+* Read up on [serverfull-gateway](https://github.com/asecurityteam/serverfull-gateway)
+
+The app can be run locally by running `make run`.
+
+This will run `docker-compose` for the serverfull project
+as well as the supplied serverfull-gateway configuration.
+The sample configration provided assumes there will be a stats
+collector running. To disable this, remove the stats configuration
+lines from the server configuration and the serverfull-gateway
+configuration.
+
+The app should now be running on port 8080.
+
+`curl -vX POST "http://localhost:8080" -H "Content-Type:application/json" -d @pkg/handlers/v1/testdata/ec2.0.json`
 
 <a id="markdown-configuration" name="configuration"></a>
 ## Configuration
 
-<Details of how to actually work with the project>
+Images of this project are built, and hosted on [DockerHub](https://cloud.docker.com/u/asecurityteam/repository/docker/asecurityteam/awsconfig-transformerd).
+
+This code functions as a stand-alone Lambda function, and can be deployed to AWS Lambda directly.
+
+For those who do not have access to AWS Lambda, you can run your own configuration by composing this
+image with your own custom configuration of serverfull-gateway.
+
 
 <a id="markdown-supported-resources" name="supported-resources"></a>
 ## Supported Resources
@@ -144,6 +166,8 @@ and the interfaces are subject to change.
 
 <a id="markdown-contributing" name="contributing"></a>
 ## Contributing
+
+If you are interested in contributing to the project, feel free to open an issue or PR.
 
 <a id="markdown-building-and-testing" name="building-and-testing"></a>
 ### Building And Testing
