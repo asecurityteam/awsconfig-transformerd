@@ -1,6 +1,5 @@
 <a id="markdown-AWSConfig Transformer" name="AWSConfig Transformer"></a>
-# AWS Config Transformer - a lambda handler that receives AWS Config changes and returns a transformed
-version of the Config change
+# AWS Config Transformer - a lambda handler that receives AWS Config changes and returns a transformed version of the Config change
 
 <https://github.com/asecurityteam/awsconfig-transformer>
 
@@ -121,12 +120,62 @@ following JSON specification:
 <a id="markdown-quick-start" name="quick-start"></a>
 ## Quick Start
 
-<Hello world style example.>
+Install docker and docker-compose.
+
+The app can be run locally by running `make run`.
+
+This will run `docker-compose` for the serverfull project
+as well as the supplied serverfull-gateway configuration.
+The sample configration provided assumes there will be a stats
+collector running. To disable this, remove the stats configuration
+lines from the server configuration and the serverfull-gateway
+configuration.
+
+The app should now be running on port 8080.
+
+`curl -vX POST "http://localhost:8080" -H "Content-Type:application/json" -d @pkg/handlers/v1/testdata/ec2.0.json`
 
 <a id="markdown-configuration" name="configuration"></a>
 ## Configuration
 
-<Details of how to actually work with the project>
+Images of this project are built, and hosted on [DockerHub](https://cloud.docker.com/u/asecurityteam/repository/docker/asecurityteam/awsconfig-transformerd).
+
+This code functions as a stand-alone Lambda function, and can be deployed to AWS Lambda directly. To run in the AWS Lambda environment,
+create a new Go project, import this project as a dependency, and run the lambda using the aws-lambda-sdk:
+
+```
+func main() {
+  transformer := &v1.Transformer{
+		LogFn:  <LOGGER_PROVIDER>,
+		StatFn: <STATS_PROVIDER>,
+	}
+  lambda.Start(transformer.Handle)
+}
+```
+
+For those who do not have access to AWS Lambda, you can run your own configuration by composing this
+image with your own custom configuration of serverfull-gateway.
+
+### Logging
+
+This project makes use of [logevent](https://github.com/asecurityteam/logevent) which provides structured logging
+using Go structs and tags. By default the project will set a logger value in the context for each request. The handler
+uses the `LogFn` function defined in `pkg/domain/alias.go` to extract the logger instance from the context.
+
+The built in logger can be configured through the serverfull runtime [configuration](https://github.com/asecurityteam/serverfull#configuration).
+
+### Stats
+
+This project uses [xstats](https://github.com/rs/xstats) as its underlying stats library. By default the project will
+set a stat client value in the context for each request. The handler uses the `StatFn` function defined in
+`pkg/domain/alias.go` to extract the logger instance from the context.
+
+The built in stats client can be configured through the serverfull runtime [configuration](https://github.com/asecurityteam/serverfull#configuration).
+
+Additional resources:
+
+* [serverfull](https://github.com/asecurityteam/serverfull)
+* [serverfull-gateway](https://github.com/asecurityteam/serverfull-gateway)
 
 <a id="markdown-supported-resources" name="supported-resources"></a>
 ## Supported Resources
@@ -144,6 +193,8 @@ and the interfaces are subject to change.
 
 <a id="markdown-contributing" name="contributing"></a>
 ## Contributing
+
+If you are interested in contributing to the project, feel free to open an issue or PR.
 
 <a id="markdown-building-and-testing" name="building-and-testing"></a>
 ### Building And Testing
