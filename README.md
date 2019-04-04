@@ -120,11 +120,7 @@ following JSON specification:
 <a id="markdown-quick-start" name="quick-start"></a>
 ## Quick Start
 
-### Pre-requisite
-
-* Install docker and docker-compose.
-* Read up on [serverfull](https://github.com/asecurityteam/serverfull)
-* Read up on [serverfull-gateway](https://github.com/asecurityteam/serverfull-gateway)
+Install docker and docker-compose.
 
 The app can be run locally by running `make run`.
 
@@ -144,11 +140,42 @@ The app should now be running on port 8080.
 
 Images of this project are built, and hosted on [DockerHub](https://cloud.docker.com/u/asecurityteam/repository/docker/asecurityteam/awsconfig-transformerd).
 
-This code functions as a stand-alone Lambda function, and can be deployed to AWS Lambda directly.
+This code functions as a stand-alone Lambda function, and can be deployed to AWS Lambda directly. To run in the AWS Lambda environment,
+create a new Go project, import this project as a dependency, and run the lambda using the aws-lambda-sdk:
+
+```
+func main() {
+  transformer := &v1.Transformer{
+		LogFn:  <LOGGER_PROVIDER>,
+		StatFn: <STATS_PROVIDER>,
+	}
+  lambda.Start(transformer.Handle)
+}
+```
 
 For those who do not have access to AWS Lambda, you can run your own configuration by composing this
 image with your own custom configuration of serverfull-gateway.
 
+### Logging
+
+This project makes use of [logevent](https://github.com/asecurityteam/logevent) which provides structured logging
+using Go structs and tags. By default the project will set a logger value in the context for each request. The handler
+uses the `LogFn` function defined in `pkg/domain/alias.go` to extract the logger instance from the context.
+
+The built in logger can be configured through the serverfull runtime [configuration](https://github.com/asecurityteam/serverfull#configuration).
+
+### Stats
+
+This project uses [xstats](https://github.com/rs/xstats) as its underlying stats library. By default the project will
+set a stat client value in the context for each request. The handler uses the `StatFn` function defined in
+`pkg/domain/alias.go` to extract the logger instance from the context.
+
+The built in stats client can be configured through the serverfull runtime [configuration](https://github.com/asecurityteam/serverfull#configuration).
+
+Additional resources:
+
+* [serverfull](https://github.com/asecurityteam/serverfull)
+* [serverfull-gateway](https://github.com/asecurityteam/serverfull-gateway)
 
 <a id="markdown-supported-resources" name="supported-resources"></a>
 ## Supported Resources
