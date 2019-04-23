@@ -46,6 +46,9 @@ type Output struct {
 	// ResourceID is the ID of the AWS resource (required)
 	ResourceID string `json:"resourceId"`
 
+	// ARN is the Amazon Resource Name (required)
+	ARN string `json:"arn"`
+
 	// Tags are key/value pairs set on the AWS resource (required)
 	Tags map[string]string `json:"tags"`
 

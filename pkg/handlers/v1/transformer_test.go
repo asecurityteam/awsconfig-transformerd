@@ -68,6 +68,7 @@ func TestTransformEC2(t *testing.T) {
 				Region:       "us-west-2",
 				ResourceID:   "i-0a763ac3ee37d8d2b",
 				ResourceType: "AWS::EC2::Instance",
+				ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
 				Tags: map[string]string{
 					"business_unit": "CISO-Security",
 					"service_name":  "foo-bar",
@@ -91,6 +92,7 @@ func TestTransformEC2(t *testing.T) {
 				Region:       "us-west-2",
 				ResourceID:   "i-0a763ac3ee37d8d2b",
 				ResourceType: "AWS::EC2::Instance",
+				ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
 				Tags: map[string]string{
 					"business_unit": "CISO-Security",
 					"service_name":  "foo-bar",
@@ -114,6 +116,7 @@ func TestTransformEC2(t *testing.T) {
 				Region:       "us-west-2",
 				ResourceID:   "i-0a763ac3ee37d8d2b",
 				ResourceType: "AWS::EC2::Instance",
+				ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
 				Tags: map[string]string{
 					"business_unit": "CISO-Security",
 					"service_name":  "foo-bar",
@@ -137,6 +140,7 @@ func TestTransformEC2(t *testing.T) {
 				Region:       "us-west-2",
 				ResourceID:   "i-0a763ac3ee37d8d2b",
 				ResourceType: "AWS::EC2::Instance",
+				ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
 				Tags: map[string]string{
 					"business_unit": "CISO-Security",
 					"service_name":  "foo-bar",
@@ -160,6 +164,7 @@ func TestTransformEC2(t *testing.T) {
 				Region:       "us-west-2",
 				ResourceID:   "i-0a763ac3ee37d8d2b",
 				ResourceType: "AWS::EC2::Instance",
+				ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
 				Tags: map[string]string{
 					"business_unit": "CISO-Security",
 					"service_name":  "foo-bar",
@@ -201,6 +206,7 @@ func TestTransformEC2(t *testing.T) {
 			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
 			assert.Equal(t, tt.ExpectedOutput.ResourceID, output.ResourceID)
 			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
+			assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
 			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
 			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
 			assert.True(t, reflect.DeepEqual(tt.ExpectedOutput.Changes, output.Changes), "The expected changes were different than the result")
