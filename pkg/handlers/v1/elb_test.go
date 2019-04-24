@@ -28,6 +28,7 @@ func TestTransformELB(t *testing.T) {
 				Region:       "us-west-2",
 				ResourceID:   "config-test-elb",
 				ResourceType: "AWS::ElasticLoadBalancing::LoadBalancer",
+				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
 				Tags: map[string]string{
 					"key1": "1",
 				},
@@ -48,6 +49,7 @@ func TestTransformELB(t *testing.T) {
 				Region:       "us-west-2",
 				ResourceID:   "config-test-elb",
 				ResourceType: "AWS::ElasticLoadBalancing::LoadBalancer",
+				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
 				Tags: map[string]string{
 					"key1": "1",
 					"key2": "2",
@@ -63,6 +65,7 @@ func TestTransformELB(t *testing.T) {
 				Region:       "us-west-2",
 				ResourceID:   "config-test-elb",
 				ResourceType: "AWS::ElasticLoadBalancing::LoadBalancer",
+				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
 				Tags: map[string]string{
 					"key1": "1",
 					"key2": "2",
@@ -83,6 +86,7 @@ func TestTransformELB(t *testing.T) {
 				ChangeTime:   "2019-03-27T19:08:40.855Z",
 				Region:       "us-west-2",
 				ResourceID:   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
+				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
 				ResourceType: "AWS::ElasticLoadBalancingV2::LoadBalancer",
 				Tags: map[string]string{
 					"key1": "1",
@@ -103,6 +107,7 @@ func TestTransformELB(t *testing.T) {
 				ChangeTime:   "2019-03-27T19:12:03.211Z",
 				Region:       "us-west-2",
 				ResourceID:   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
+				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
 				ResourceType: "AWS::ElasticLoadBalancingV2::LoadBalancer",
 				Tags: map[string]string{
 					"key1": "1",
@@ -118,6 +123,7 @@ func TestTransformELB(t *testing.T) {
 				ChangeTime:   "2019-03-27T19:16:22.178Z",
 				Region:       "us-west-2",
 				ResourceID:   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
+				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
 				ResourceType: "AWS::ElasticLoadBalancingV2::LoadBalancer",
 				Tags: map[string]string{
 					"key1": "1",
@@ -185,6 +191,7 @@ func TestELBTransformerCreate(t *testing.T) {
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
 					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
 					Tags:                         map[string]string{},
 				},
 				ConfigurationItemDiff: configurationItemDiff{
@@ -204,6 +211,7 @@ func TestELBTransformerCreate(t *testing.T) {
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
 					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
 					Tags:                         map[string]string{"foo": "bar"},
 					Configuration:                json.RawMessage(`{"dnsname": 1}`),
 				},
@@ -224,6 +232,7 @@ func TestELBTransformerCreate(t *testing.T) {
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
 					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
 					Tags:                         map[string]string{},
 				},
 				ConfigurationItemDiff: configurationItemDiff{
@@ -278,6 +287,7 @@ func TestELBTransformerUpdate(t *testing.T) {
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
 					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
 					Tags:                         map[string]string{},
 				},
 				ConfigurationItemDiff: configurationItemDiff{
@@ -297,6 +307,7 @@ func TestELBTransformerUpdate(t *testing.T) {
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
 					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
 					Tags:                         map[string]string{},
 				},
 				ConfigurationItemDiff: configurationItemDiff{
@@ -351,6 +362,7 @@ func TestELBTransformerDelete(t *testing.T) {
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
 					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
 					Tags:                         map[string]string{},
 				},
 				ConfigurationItemDiff: configurationItemDiff{
@@ -374,6 +386,7 @@ func TestELBTransformerDelete(t *testing.T) {
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
 					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
 					Tags:                         map[string]string{},
 				},
 				ConfigurationItemDiff: configurationItemDiff{
@@ -396,6 +409,7 @@ func TestELBTransformerDelete(t *testing.T) {
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
 					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
 					Tags:                         map[string]string{},
 				},
 				ConfigurationItemDiff: configurationItemDiff{
@@ -418,6 +432,7 @@ func TestELBTransformerDelete(t *testing.T) {
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
 					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
 					Tags:                         map[string]string{},
 				},
 				ConfigurationItemDiff: configurationItemDiff{
@@ -440,6 +455,7 @@ func TestELBTransformerDelete(t *testing.T) {
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
 					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
 					Tags:                         map[string]string{"foo": "bar"},
 				},
 				ConfigurationItemDiff: configurationItemDiff{
@@ -462,6 +478,7 @@ func TestELBTransformerDelete(t *testing.T) {
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
 					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
 					Tags:                         map[string]string{"foo": "bar"},
 				},
 				ConfigurationItemDiff: configurationItemDiff{

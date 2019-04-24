@@ -68,6 +68,9 @@ func getBaseOutput(c configurationItem) (Output, error) {
 	if c.ResourceType == "" {
 		return Output{}, ErrMissingValue{Field: "ResourceType"}
 	}
+	if c.ARN == "" {
+		return Output{}, ErrMissingValue{Field: "ARN"}
+	}
 	if c.Tags == nil {
 		return Output{}, ErrMissingValue{Field: "Tags"}
 	}
@@ -77,6 +80,7 @@ func getBaseOutput(c configurationItem) (Output, error) {
 		Region:       c.AWSRegion,
 		ResourceID:   c.ResourceID,
 		ResourceType: c.ResourceType,
+		ARN:          c.ARN,
 		Tags:         c.Tags,
 	}, nil
 }
