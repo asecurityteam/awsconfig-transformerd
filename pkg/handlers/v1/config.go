@@ -62,9 +62,6 @@ func getBaseOutput(c configurationItem) (Output, error) {
 	if c.ConfigurationItemCaptureTime == "" {
 		return Output{}, ErrMissingValue{Field: "ConfigurationItemCaptureTime"}
 	}
-	if c.ResourceID == "" {
-		return Output{}, ErrMissingValue{Field: "ResourceID"}
-	}
 	if c.ResourceType == "" {
 		return Output{}, ErrMissingValue{Field: "ResourceType"}
 	}
@@ -78,7 +75,6 @@ func getBaseOutput(c configurationItem) (Output, error) {
 		AccountID:    c.AWSAccountID,
 		ChangeTime:   c.ConfigurationItemCaptureTime,
 		Region:       c.AWSRegion,
-		ResourceID:   c.ResourceID,
 		ResourceType: c.ResourceType,
 		ARN:          c.ARN,
 		Tags:         c.Tags,

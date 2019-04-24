@@ -43,9 +43,6 @@ type Output struct {
 	// Region is the AWS region (required)
 	Region string `json:"region"`
 
-	// ResourceID is the ID of the AWS resource (required)
-	ResourceID string `json:"resourceId"`
-
 	// ARN is the Amazon Resource Name (required)
 	ARN string `json:"arn"`
 

@@ -26,7 +26,6 @@ func TestTransformELB(t *testing.T) {
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-03-27T19:06:49.363Z",
 				Region:       "us-west-2",
-				ResourceID:   "config-test-elb",
 				ResourceType: "AWS::ElasticLoadBalancing::LoadBalancer",
 				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
 				Tags: map[string]string{
@@ -47,7 +46,6 @@ func TestTransformELB(t *testing.T) {
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-03-27T19:12:28.624Z",
 				Region:       "us-west-2",
-				ResourceID:   "config-test-elb",
 				ResourceType: "AWS::ElasticLoadBalancing::LoadBalancer",
 				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
 				Tags: map[string]string{
@@ -63,7 +61,6 @@ func TestTransformELB(t *testing.T) {
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-03-27T19:16:23.926Z",
 				Region:       "us-west-2",
-				ResourceID:   "config-test-elb",
 				ResourceType: "AWS::ElasticLoadBalancing::LoadBalancer",
 				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
 				Tags: map[string]string{
@@ -85,8 +82,7 @@ func TestTransformELB(t *testing.T) {
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-03-27T19:08:40.855Z",
 				Region:       "us-west-2",
-				ResourceID:   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
-				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
+				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 				ResourceType: "AWS::ElasticLoadBalancingV2::LoadBalancer",
 				Tags: map[string]string{
 					"key1": "1",
@@ -106,8 +102,7 @@ func TestTransformELB(t *testing.T) {
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-03-27T19:12:03.211Z",
 				Region:       "us-west-2",
-				ResourceID:   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
-				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
+				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 				ResourceType: "AWS::ElasticLoadBalancingV2::LoadBalancer",
 				Tags: map[string]string{
 					"key1": "1",
@@ -122,8 +117,7 @@ func TestTransformELB(t *testing.T) {
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-03-27T19:16:22.178Z",
 				Region:       "us-west-2",
-				ResourceID:   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
-				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
+				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 				ResourceType: "AWS::ElasticLoadBalancingV2::LoadBalancer",
 				Tags: map[string]string{
 					"key1": "1",
@@ -165,7 +159,7 @@ func TestTransformELB(t *testing.T) {
 
 			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
 			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
-			assert.Equal(t, tt.ExpectedOutput.ResourceID, output.ResourceID)
+			assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
 			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
 			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
 			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
@@ -189,9 +183,8 @@ func TestELBTransformerCreate(t *testing.T) {
 					AWSAccountID:                 "123456789012",
 					AWSRegion:                    "us-west-2",
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
-					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
-					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					Tags:                         map[string]string{},
 				},
 				ConfigurationItemDiff: configurationItemDiff{
@@ -209,9 +202,8 @@ func TestELBTransformerCreate(t *testing.T) {
 					AWSAccountID:                 "123456789012",
 					AWSRegion:                    "us-west-2",
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
-					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
-					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					Tags:                         map[string]string{"foo": "bar"},
 					Configuration:                json.RawMessage(`{"dnsname": 1}`),
 				},
@@ -230,9 +222,8 @@ func TestELBTransformerCreate(t *testing.T) {
 					AWSAccountID:                 "",
 					AWSRegion:                    "us-west-2",
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
-					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
-					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					Tags:                         map[string]string{},
 				},
 				ConfigurationItemDiff: configurationItemDiff{
@@ -261,7 +252,7 @@ func TestELBTransformerCreate(t *testing.T) {
 			}
 			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
 			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
-			assert.Equal(t, tt.ExpectedOutput.ResourceID, output.ResourceID)
+			assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
 			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
 			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
 			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
@@ -285,9 +276,8 @@ func TestELBTransformerUpdate(t *testing.T) {
 					AWSAccountID:                 "123456789012",
 					AWSRegion:                    "us-west-2",
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
-					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
-					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					Tags:                         map[string]string{},
 				},
 				ConfigurationItemDiff: configurationItemDiff{
@@ -305,9 +295,8 @@ func TestELBTransformerUpdate(t *testing.T) {
 					AWSAccountID:                 "",
 					AWSRegion:                    "us-west-2",
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
-					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
-					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					Tags:                         map[string]string{},
 				},
 				ConfigurationItemDiff: configurationItemDiff{
@@ -336,7 +325,7 @@ func TestELBTransformerUpdate(t *testing.T) {
 			}
 			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
 			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
-			assert.Equal(t, tt.ExpectedOutput.ResourceID, output.ResourceID)
+			assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
 			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
 			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
 			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
@@ -360,9 +349,8 @@ func TestELBTransformerDelete(t *testing.T) {
 					AWSAccountID:                 "123456789012",
 					AWSRegion:                    "us-west-2",
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
-					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
-					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					Tags:                         map[string]string{},
 				},
 				ConfigurationItemDiff: configurationItemDiff{
@@ -384,9 +372,8 @@ func TestELBTransformerDelete(t *testing.T) {
 					AWSAccountID:                 "123456789012",
 					AWSRegion:                    "us-west-2",
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
-					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
-					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					Tags:                         map[string]string{},
 				},
 				ConfigurationItemDiff: configurationItemDiff{
@@ -407,9 +394,8 @@ func TestELBTransformerDelete(t *testing.T) {
 					AWSAccountID:                 "123456789012",
 					AWSRegion:                    "us-west-2",
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
-					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
-					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					Tags:                         map[string]string{},
 				},
 				ConfigurationItemDiff: configurationItemDiff{
@@ -430,9 +416,8 @@ func TestELBTransformerDelete(t *testing.T) {
 					AWSAccountID:                 "",
 					AWSRegion:                    "us-west-2",
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
-					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
-					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					Tags:                         map[string]string{},
 				},
 				ConfigurationItemDiff: configurationItemDiff{
@@ -453,9 +438,8 @@ func TestELBTransformerDelete(t *testing.T) {
 					AWSAccountID:                 "123456789012",
 					AWSRegion:                    "us-west-2",
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
-					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
-					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					Tags:                         map[string]string{"foo": "bar"},
 				},
 				ConfigurationItemDiff: configurationItemDiff{
@@ -476,9 +460,8 @@ func TestELBTransformerDelete(t *testing.T) {
 					AWSAccountID:                 "123456789012",
 					AWSRegion:                    "us-west-2",
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
-					ResourceID:                   "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
-					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					Tags:                         map[string]string{"foo": "bar"},
 				},
 				ConfigurationItemDiff: configurationItemDiff{
@@ -508,7 +491,6 @@ func TestELBTransformerDelete(t *testing.T) {
 			}
 			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
 			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
-			assert.Equal(t, tt.ExpectedOutput.ResourceID, output.ResourceID)
 			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
 			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
 			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)

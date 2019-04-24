@@ -66,7 +66,6 @@ func TestTransformEC2(t *testing.T) {
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T20:43:10.208Z",
 				Region:       "us-west-2",
-				ResourceID:   "i-0a763ac3ee37d8d2b",
 				ResourceType: "AWS::EC2::Instance",
 				ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
 				Tags: map[string]string{
@@ -90,7 +89,6 @@ func TestTransformEC2(t *testing.T) {
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T20:48:32.538Z",
 				Region:       "us-west-2",
-				ResourceID:   "i-0a763ac3ee37d8d2b",
 				ResourceType: "AWS::EC2::Instance",
 				ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
 				Tags: map[string]string{
@@ -114,7 +112,6 @@ func TestTransformEC2(t *testing.T) {
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T21:02:18.758Z",
 				Region:       "us-west-2",
-				ResourceID:   "i-0a763ac3ee37d8d2b",
 				ResourceType: "AWS::EC2::Instance",
 				ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
 				Tags: map[string]string{
@@ -138,7 +135,6 @@ func TestTransformEC2(t *testing.T) {
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T21:17:53.073Z",
 				Region:       "us-west-2",
-				ResourceID:   "i-0a763ac3ee37d8d2b",
 				ResourceType: "AWS::EC2::Instance",
 				ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
 				Tags: map[string]string{
@@ -162,7 +158,6 @@ func TestTransformEC2(t *testing.T) {
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T21:31:57.042Z",
 				Region:       "us-west-2",
-				ResourceID:   "i-0a763ac3ee37d8d2b",
 				ResourceType: "AWS::EC2::Instance",
 				ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
 				Tags: map[string]string{
@@ -204,7 +199,6 @@ func TestTransformEC2(t *testing.T) {
 
 			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
 			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
-			assert.Equal(t, tt.ExpectedOutput.ResourceID, output.ResourceID)
 			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
 			assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
 			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
