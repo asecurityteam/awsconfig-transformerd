@@ -6,10 +6,8 @@ import (
 
 	handlers "github.com/asecurityteam/awsconfig-transformerd/pkg/handlers/v1"
 	"github.com/asecurityteam/runhttp"
-	serverfull "github.com/asecurityteam/serverfull/pkg"
-	serverfulldomain "github.com/asecurityteam/serverfull/pkg/domain"
+	"github.com/asecurityteam/serverfull"
 	"github.com/asecurityteam/settings"
-	"github.com/aws/aws-lambda-go/lambda"
 )
 
 func main() {
@@ -20,19 +18,16 @@ func main() {
 		StatFn: runhttp.StatFromContext,
 	}
 
-	handlersMap := map[string]serverfulldomain.Handler{
-		"awsConfigHandler": lambda.NewHandler(transformer.Handle),
+	handlersMap := map[string]serverfull.Function{
+		"awsConfigHandler": serverfull.NewFunction(transformer.Handle),
 	}
 
 	source, err := settings.NewEnvSource(os.Environ())
 	if err != nil {
 		panic(err.Error())
 	}
-	rt, err := serverfull.NewStatic(ctx, source, handlersMap)
-	if err != nil {
-		panic(err.Error())
-	}
-	if err := rt.Run(); err != nil {
+	fetcher := &serverfull.StaticFetcher{Functions: handlersMap}
+	if err := serverfull.Start(ctx, source, fetcher); err != nil {
 		panic(err.Error())
 	}
 }
