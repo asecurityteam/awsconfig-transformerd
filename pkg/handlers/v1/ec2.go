@@ -68,9 +68,6 @@ func (t ec2Transformer) Create(event awsConfigEvent) (Output, error) {
 	if err != nil {
 		return Output{}, err
 	}
-	if len(output.Tags) == 0 {
-		return Output{}, ErrMissingValue{Field: "Tags"}
-	}
 
 	// if a resource is created for the first time, there is no diff.
 	// just read the configuration
@@ -88,9 +85,6 @@ func (t ec2Transformer) Update(event awsConfigEvent) (Output, error) {
 	output, err := getBaseOutput(event.ConfigurationItem)
 	if err != nil {
 		return Output{}, err
-	}
-	if len(output.Tags) == 0 {
-		return Output{}, ErrMissingValue{Field: "Tags"}
 	}
 
 	addedChange := Change{ChangeType: added}
@@ -144,9 +138,6 @@ func (t ec2Transformer) Delete(event awsConfigEvent) (Output, error) {
 	var configDiff ec2ConfigurationDiff
 	if err := json.Unmarshal(configDiffRaw, &configDiff); err != nil {
 		return Output{}, err
-	}
-	if configDiff.PreviousValue.Tags == nil || len(configDiff.PreviousValue.Tags) == 0 {
-		return Output{}, ErrMissingValue{Field: "Tags"}
 	}
 	for _, tag := range configDiff.PreviousValue.Tags {
 		output.Tags[tag.Key] = tag.Value

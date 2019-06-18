@@ -132,6 +132,23 @@ func TestTransformELB(t *testing.T) {
 			},
 		},
 		{
+			Name:      "elbv2-created-notags",
+			InputFile: "elbv2.create-notags.json",
+			ExpectedOutput: Output{
+				AccountID:    "123456789012",
+				ChangeTime:   "2019-03-27T19:08:40.855Z",
+				Region:       "us-west-2",
+				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
+				ResourceType: "AWS::ElasticLoadBalancingV2::LoadBalancer",
+				Changes: []Change{
+					{
+						Hostnames:  []string{"internal-config-test-alb-012345678.us-west-2.elb.amazonaws.com"},
+						ChangeType: added,
+					},
+				},
+			},
+		},
+		{
 			Name:           "elb-malformed",
 			InputFile:      "elb.malformed.json",
 			ExpectedOutput: Output{},
@@ -176,25 +193,6 @@ func TestELBTransformerCreate(t *testing.T) {
 		ExpectError    bool
 		ExpectedError  error
 	}{
-		{
-			Name: "elb-create-no-tags",
-			Event: awsConfigEvent{
-				ConfigurationItem: configurationItem{
-					AWSAccountID:                 "123456789012",
-					AWSRegion:                    "us-west-2",
-					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
-					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
-					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
-					Tags:                         map[string]string{},
-				},
-				ConfigurationItemDiff: configurationItemDiff{
-					ChangeType: create,
-				},
-			},
-			ExpectedOutput: Output{},
-			ExpectError:    true,
-			ExpectedError:  ErrMissingValue{Field: "Tags"},
-		},
 		{
 			Name: "elb-unmarsall-error",
 			Event: awsConfigEvent{
@@ -270,25 +268,6 @@ func TestELBTransformerUpdate(t *testing.T) {
 		ExpectedError  error
 	}{
 		{
-			Name: "elb-update-no-tags",
-			Event: awsConfigEvent{
-				ConfigurationItem: configurationItem{
-					AWSAccountID:                 "123456789012",
-					AWSRegion:                    "us-west-2",
-					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
-					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
-					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
-					Tags:                         map[string]string{},
-				},
-				ConfigurationItemDiff: configurationItemDiff{
-					ChangeType: update,
-				},
-			},
-			ExpectedOutput: Output{},
-			ExpectError:    true,
-			ExpectedError:  ErrMissingValue{Field: "Tags"},
-		},
-		{
 			Name: "elb-missing-value",
 			Event: awsConfigEvent{
 				ConfigurationItem: configurationItem{
@@ -351,7 +330,6 @@ func TestELBTransformerDelete(t *testing.T) {
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
 					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
-					Tags:                         map[string]string{},
 				},
 				ConfigurationItemDiff: configurationItemDiff{
 					ChangeType: delete,
@@ -361,9 +339,20 @@ func TestELBTransformerDelete(t *testing.T) {
 					},
 				},
 			},
-			ExpectedOutput: Output{},
-			ExpectError:    true,
-			ExpectedError:  ErrMissingValue{Field: "Tags"},
+			ExpectedOutput: Output{
+				AccountID:    "123456789012",
+				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
+				ResourceType: "AWS::ElasticLoadBalancingV2::LoadBalancer",
+				Region:       "us-west-2",
+				ChangeTime:   "2019-03-27T19:06:49.363Z",
+				Changes: []Change{
+					{
+						ChangeType: "DELETED",
+						Hostnames:  []string{"internal-config-test-elb-67410663.us-west-2.elb.amazonaws.com"},
+					},
+				},
+			},
+			ExpectError: false,
 		},
 		{
 			Name: "elb-delete-missing-supplementary-config",
@@ -374,7 +363,6 @@ func TestELBTransformerDelete(t *testing.T) {
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
 					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
-					Tags:                         map[string]string{},
 				},
 				ConfigurationItemDiff: configurationItemDiff{
 					ChangeType: delete,
@@ -383,9 +371,20 @@ func TestELBTransformerDelete(t *testing.T) {
 					},
 				},
 			},
-			ExpectedOutput: Output{},
-			ExpectError:    true,
-			ExpectedError:  ErrMissingValue{Field: "ChangedProperties.SupplementaryConfiguration.Tags"},
+			ExpectedOutput: Output{
+				AccountID:    "123456789012",
+				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
+				ResourceType: "AWS::ElasticLoadBalancingV2::LoadBalancer",
+				Region:       "us-west-2",
+				ChangeTime:   "2019-03-27T19:06:49.363Z",
+				Changes: []Change{
+					{
+						ChangeType: "DELETED",
+						Hostnames:  []string{"internal-config-test-elb-67410663.us-west-2.elb.amazonaws.com"},
+					},
+				},
+			},
+			ExpectError: false,
 		},
 		{
 			Name: "elb-delete-missing-config",

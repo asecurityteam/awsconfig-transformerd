@@ -75,9 +75,10 @@ func TestMissingRequiredFields(t *testing.T) {
 				AWSRegion:                    "us-west-2",
 				ConfigurationItemCaptureTime: "2019-02-22T20:19:20.543Z",
 				ResourceID:                   "abc1234",
+				ARN:                          "arn:partition:service:region:account-id:resourcetype/resource",
 				ResourceType:                 configservice.ResourceTypeAwsEc2Instance,
 			},
-			ExpectedError: true,
+			ExpectedError: false,
 		},
 		{
 			Name: "empty arn",
