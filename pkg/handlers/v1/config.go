@@ -68,9 +68,6 @@ func getBaseOutput(c configurationItem) (Output, error) {
 	if c.ARN == "" {
 		return Output{}, ErrMissingValue{Field: "ARN"}
 	}
-	if c.Tags == nil {
-		return Output{}, ErrMissingValue{Field: "Tags"}
-	}
 	return Output{
 		AccountID:    c.AWSAccountID,
 		ChangeTime:   c.ConfigurationItemCaptureTime,

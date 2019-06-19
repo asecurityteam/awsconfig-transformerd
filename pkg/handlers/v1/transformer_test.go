@@ -173,6 +173,42 @@ func TestTransformEC2(t *testing.T) {
 			},
 		},
 		{
+			Name:      "ec2-created-notags",
+			InputFile: "ec2.5.json",
+			ExpectedOutput: Output{
+				AccountID:    "123456789012",
+				ChangeTime:   "2019-02-22T20:43:10.208Z",
+				Region:       "us-west-2",
+				ResourceType: "AWS::EC2::Instance",
+				ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
+				Changes: []Change{
+					{
+						PrivateIPAddresses: []string{"172.31.30.79"},
+						PublicIPAddresses:  []string{"34.222.120.66"},
+						Hostnames:          []string{"ec2-34-222-120-66.us-west-2.compute.amazonaws.com"},
+						ChangeType:         "ADDED",
+					},
+				},
+			},
+		},
+		{
+			Name:      "ec2-terminated-notags",
+			InputFile: "ec2.6.json",
+			ExpectedOutput: Output{
+				AccountID:    "123456789012",
+				ChangeTime:   "2019-02-22T21:31:57.042Z",
+				Region:       "us-west-2",
+				ResourceType: "AWS::EC2::Instance",
+				ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
+				Changes: []Change{
+					{
+						PrivateIPAddresses: []string{"172.31.30.79"},
+						ChangeType:         "DELETED",
+					},
+				},
+			},
+		},
+		{
 			Name:        "ec2-malformed-configuration",
 			InputFile:   "ec2.malformed.json",
 			ExpectError: true,

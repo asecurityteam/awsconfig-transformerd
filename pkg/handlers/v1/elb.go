@@ -15,8 +15,8 @@ type elbConfigurationDiff struct {
 }
 
 type supplementaryConfigurationDiff struct {
-	PreviousValue *[]tag `json:"previousValue"`
-	UpdatedValue  *[]tag `json:"updatedValue"`
+	PreviousValue []tag  `json:"previousValue"`
+	UpdatedValue  []tag  `json:"updatedValue"`
 	ChangeType    string `json:"changeType"`
 }
 
@@ -32,9 +32,6 @@ func (t elbTransformer) Create(event awsConfigEvent) (Output, error) {
 	output, err := getBaseOutput(event.ConfigurationItem)
 	if err != nil {
 		return Output{}, err
-	}
-	if len(output.Tags) == 0 {
-		return Output{}, ErrMissingValue{Field: "Tags"}
 	}
 
 	// if a resource is created for the first time, there is no diff.
@@ -54,9 +51,6 @@ func (t elbTransformer) Update(event awsConfigEvent) (Output, error) {
 	output, err := getBaseOutput(event.ConfigurationItem)
 	if err != nil {
 		return Output{}, err
-	}
-	if len(output.Tags) == 0 {
-		return Output{}, ErrMissingValue{Field: "Tags"}
 	}
 	return output, nil
 }
@@ -87,16 +81,14 @@ func (t elbTransformer) Delete(event awsConfigEvent) (Output, error) {
 	// we must fetch them from the previous configuration.
 	supplementaryConfigDiffRaw, ok := changeProps["SupplementaryConfiguration.Tags"]
 	if !ok {
-		return Output{}, ErrMissingValue{Field: "ChangedProperties.SupplementaryConfiguration.Tags"}
+		return output, nil
 	}
 	var supplementaryConfigDiff supplementaryConfigurationDiff
 	if err := json.Unmarshal(supplementaryConfigDiffRaw, &supplementaryConfigDiff); err != nil {
 		return Output{}, err
 	}
-	if supplementaryConfigDiff.PreviousValue == nil || len(*supplementaryConfigDiff.PreviousValue) == 0 {
-		return Output{}, ErrMissingValue{Field: "Tags"}
-	}
-	for _, tag := range *supplementaryConfigDiff.PreviousValue {
+
+	for _, tag := range supplementaryConfigDiff.PreviousValue {
 		output.Tags[tag.Key] = tag.Value
 	}
 	return output, nil
