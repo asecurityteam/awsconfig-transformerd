@@ -1,5 +1,6 @@
 <a id="markdown-AWSConfig Transformer" name="AWSConfig Transformer"></a>
 # AWS Config Transformer - a lambda handler that receives AWS Config changes and returns a transformed version of the Config change
+[![GoDoc](https://godoc.org/github.com/asecurityteam/awsconfig-transformerd?status.svg)](https://godoc.org/github.com/asecurityteam/awsconfig-transformerd)
 
 <https://github.com/asecurityteam/awsconfig-transformer>
 
