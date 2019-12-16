@@ -141,7 +141,7 @@ func (t ec2Transformer) Delete(event awsConfigEvent) (Output, error) {
 	if output.ARN == "" {
 		previousARNRaw, ok := changeProps["ARN"]
 		if !ok {
-			return Output{}, errors.New("Invalid configuration diff, could not find ARN")
+			return Output{}, ErrMissingValue{Field: "ARN"}
 		}
 		var changedPropsARN ec2ChangedPropsARN
 		if err := json.Unmarshal(previousARNRaw, &changedPropsARN); err != nil {

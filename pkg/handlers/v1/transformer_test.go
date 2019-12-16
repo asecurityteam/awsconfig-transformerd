@@ -251,6 +251,11 @@ func TestTransformEC2(t *testing.T) {
 				},
 			},
 		},
+		{
+			Name:        "ec2-deleted-malformed-config",
+			InputFile:   "ec2.deleted-malformed.json",
+			ExpectError: true,
+		},
 	}
 
 	for _, tt := range tc {
