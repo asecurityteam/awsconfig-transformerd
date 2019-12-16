@@ -47,17 +47,6 @@ func TestMissingRequiredFields(t *testing.T) {
 			ExpectedError: true,
 		},
 		{
-			Name: "missing-resourceID",
-			ConfigItem: configurationItem{
-				AWSAccountID:                 "0123456789012",
-				AWSRegion:                    "us-west-2",
-				ConfigurationItemCaptureTime: "2019-02-22T20:19:20.543Z",
-				ResourceID:                   "",
-				ResourceType:                 configservice.ResourceTypeAwsEc2Instance,
-			},
-			ExpectedError: true,
-		},
-		{
 			Name: "missing-resource-type",
 			ConfigItem: configurationItem{
 				AWSAccountID:                 "0123456789012",
@@ -79,18 +68,6 @@ func TestMissingRequiredFields(t *testing.T) {
 				ResourceType:                 configservice.ResourceTypeAwsEc2Instance,
 			},
 			ExpectedError: false,
-		},
-		{
-			Name: "empty arn",
-			ConfigItem: configurationItem{
-				AWSAccountID:                 "0123456789012",
-				AWSRegion:                    "us-west-2",
-				ConfigurationItemCaptureTime: "2019-02-22T20:19:20.543Z",
-				ResourceID:                   "abc1234",
-				ResourceType:                 configservice.ResourceTypeAwsEc2Instance,
-				Tags:                         map[string]string{"foo": "bar"},
-			},
-			ExpectedError: true,
 		},
 		{
 			Name: "valid",

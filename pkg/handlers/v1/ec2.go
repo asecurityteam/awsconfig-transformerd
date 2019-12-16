@@ -61,6 +61,12 @@ type ec2ConfigurationDiff struct {
 	ChangeType    string            `json:"changeType"`
 }
 
+type ec2ChangedPropsARN struct {
+	PreviousValue string `json:"previousValue"`
+	UpdatedValue  string `json:"updatedValue"`
+	ChangeType    string `json:"changeType"`
+}
+
 type ec2Transformer struct{}
 
 func (t ec2Transformer) Create(event awsConfigEvent) (Output, error) {
@@ -131,6 +137,19 @@ func (t ec2Transformer) Delete(event awsConfigEvent) (Output, error) {
 	// if a resource is deleted, the tags are no longer present in the base object.
 	// we must fetch them from the previous configuration.
 	changeProps := event.ConfigurationItemDiff.ChangedProperties
+
+	if output.ARN == "" {
+		previousARNRaw, ok := changeProps["ARN"]
+		if !ok {
+			return Output{}, errors.New("Invalid configuration diff, could not find ARN")
+		}
+		var changedPropsARN ec2ChangedPropsARN
+		if err := json.Unmarshal(previousARNRaw, &changedPropsARN); err != nil {
+			return Output{}, err
+		}
+		output.ARN = changedPropsARN.PreviousValue
+	}
+
 	configDiffRaw, ok := changeProps["Configuration"]
 	if !ok {
 		return Output{}, errors.New("Invalid configuration diff")
