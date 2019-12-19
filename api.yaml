@@ -72,6 +72,10 @@ paths:
                 $ref: '#/components/schemas/CloudAssetChanges'
         "400":
           description: "Invalid input"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
       x-transportd:
         backend: app
         enabled:
@@ -171,3 +175,14 @@ components:
         changeType:
           type: string
           enum: [ADDED, DELETED]
+    Error:
+      type: object
+      properties:
+        errorMessage:
+          type: string
+        errorType:
+          type: string
+        stackTrace:
+          type: array
+          items:
+            type: string
