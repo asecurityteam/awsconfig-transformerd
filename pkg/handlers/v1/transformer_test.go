@@ -213,6 +213,49 @@ func TestTransformEC2(t *testing.T) {
 			InputFile:   "ec2.malformed.json",
 			ExpectError: true,
 		},
+		{
+			Name:      "ec2-deleted-configuration",
+			InputFile: "ec2.deleted.json",
+			ExpectedOutput: Output{
+				AccountID:    "752631980301",
+				ChangeTime:   "2019-12-11T01:00:29.000Z",
+				Region:       "us-west-2",
+				ResourceType: "AWS::EC2::Instance",
+				ARN:          "arn:aws:ec2:us-west-2:752631980301:instance/i-08f37101ae44e31e4",
+				Tags: map[string]string{
+					"aws:autoscaling:groupName":     "status-page-web-graphql--stg-west2--314741c3cad246cebf35d178c10d086750--2019-12-11-00-56-utc--ohdjsjstilmha6fg--WebServer",
+					"aws:cloudformation:logical-id": "WebServer",
+					"aws:cloudformation:stack-id":   "arn:aws:cloudformation:us-west-2:752631980301:stack/status-page-web-graphql--stg-west2--314741c3cad246cebf35d178c10d086750--2019-12-11-00-56-utc--ohdjsjstilmha6fg/28c7b740-1bb1-11ea-ae0e-024a7c148296",
+					"aws:cloudformation:stack-name": "status-page-web-graphql--stg-west2--314741c3cad246cebf35d178c10d086750--2019-12-11-00-56-utc--ohdjsjstilmha6fg",
+					"business_unit":                 "Engineering-SP",
+					"Name":                          "status-page-web-graphql--stg-west2--314741c3cad246cebf35d178c10d086750--2019-12-11-00-56-utc--ohdjsjstilmha6fg",
+					"chaos_monkey":                  "false",
+					"compute_type":                  "ec2",
+					"deployment_id":                 "ohdjsjstilmha6fg",
+					"environment":                   "stg-west2",
+					"environment_type":              "staging",
+					"micros_deployment_id":          "ohdjsjstilmha6fg",
+					"micros_group":                  "WebServer",
+					"micros_service_id":             "status-page-web-graphql",
+					"micros_service_version":        "314741c3cad246cebf35d178c10d08675093b3dc",
+					"resource_owner":                "rvenkatesh",
+					"service_name":                  "status-page-web-graphql.us-west-2.staging.atl-paas.net",
+				},
+				Changes: []Change{
+					{
+						PrivateIPAddresses: []string{"10.103.19.93", "10.107.70.212"},
+						PublicIPAddresses:  []string{"52.27.166.73"},
+						Hostnames:          []string{"ec2-52-27-166-73.us-west-2.compute.amazonaws.com"},
+						ChangeType:         "DELETED",
+					},
+				},
+			},
+		},
+		{
+			Name:        "ec2-deleted-malformed-config",
+			InputFile:   "ec2.deleted-malformed.json",
+			ExpectError: true,
+		},
 	}
 
 	for _, tt := range tc {

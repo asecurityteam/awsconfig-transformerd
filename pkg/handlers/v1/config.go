@@ -65,9 +65,6 @@ func getBaseOutput(c configurationItem) (Output, error) {
 	if c.ResourceType == "" {
 		return Output{}, ErrMissingValue{Field: "ResourceType"}
 	}
-	if c.ARN == "" {
-		return Output{}, ErrMissingValue{Field: "ARN"}
-	}
 	return Output{
 		AccountID:    c.AWSAccountID,
 		ChangeTime:   c.ConfigurationItemCaptureTime,
