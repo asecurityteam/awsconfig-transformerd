@@ -473,7 +473,7 @@ func TestELBTransformerDelete(t *testing.T) {
 			},
 			ExpectedOutput: Output{},
 			ExpectError:    true,
-			ExpectedError:  &json.UnmarshalTypeError{Value: "number", Offset: 27, Type: reflect.TypeOf(""), Struct: "tag", Field: "key"},
+			ExpectedError:  &json.UnmarshalTypeError{Value: "number", Offset: 27, Type: reflect.TypeOf(""), Struct: "tag", Field: "previousValue.key"},
 		},
 	}
 
