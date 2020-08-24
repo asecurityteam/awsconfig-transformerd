@@ -19,37 +19,37 @@ func TestTransformENI(t *testing.T) {
 		ExpectError    bool
 	}{
 		{
-			Name:		"eni-created",
-			InputFile:	"eni.create.json",
+			Name:      "eni-created",
+			InputFile: "eni.create.json",
 			ExpectedOutput: Output{
-				AccountID:		"123456789",
-				ChangeTime: 	"2020-08-21T12:00:00.000Z",
-				Region:  		"ap-southeast-2",
-				ResourceType:  	"AWS::EC2::NetworkInterface",
-				ARN:			"arn:aws:ec2:ap-southeast-2:123456789:network-interface/eni-abcdefghi1234567",
+				AccountID:    "123456789",
+				ChangeTime:   "2020-08-21T12:00:00.000Z",
+				Region:       "ap-southeast-2",
+				ResourceType: "AWS::EC2::NetworkInterface",
+				ARN:          "arn:aws:ec2:ap-southeast-2:123456789:network-interface/eni-abcdefghi1234567",
 				Changes: []Change{
 					{
 						PrivateIPAddresses: []string{"10.111.2.333"},
-						RelatedResource: 	[]string{"micros-sec-example-ELB-AAAAAA11111"},
-						ChangeType: 		create,
+						RelatedResource:    []string{"micros-sec-example-ELB-AAAAAA11111"},
+						ChangeType:         create,
 					},
 				},
 			},
 		},
 		{
-			Name:  		"eni-deleted",
-			InputFile:  "eni.delete.json",
+			Name:      "eni-deleted",
+			InputFile: "eni.delete.json",
 			ExpectedOutput: Output{
-				AccountID:  	"12345678910",
-				ChangeTime:  	"2020-08-21T13:02:00.000Z",
-				Region:  		"us-east-1",
-				ResourceType:	"AWS::EC2::NetworkInterface",
-				ARN:			"arn:aws:ec2:us-east-1:12345678910:network-interface/eni-hhhhhhh888888",
+				AccountID:    "12345678910",
+				ChangeTime:   "2020-08-21T13:02:00.000Z",
+				Region:       "us-east-1",
+				ResourceType: "AWS::EC2::NetworkInterface",
+				ARN:          "arn:aws:ec2:us-east-1:12345678910:network-interface/eni-hhhhhhh888888",
 				Changes: []Change{
 					{
 						PrivateIPAddresses: []string{"10.111.222.333"},
-						RelatedResource: 	[]string{"app/marketp-ALB-eeeeeee5555555/ffffffff66666666"},
-						ChangeType: 		delete,
+						RelatedResource:    []string{"app/marketp-ALB-eeeeeee5555555/ffffffff66666666"},
+						ChangeType:         delete,
 					},
 				},
 			},
@@ -85,7 +85,7 @@ func TestTransformENI(t *testing.T) {
 	}
 }
 
-func TestENITransformerUpdate(t *testing.T){
+func TestENITransformerUpdate(t *testing.T) {
 	// FOr now it looks like updates don't apply to the types of ENI events we're interested in
 	data, err := ioutil.ReadFile(filepath.Join("testdata", "eni.update.json"))
 	require.Nil(t, err)
@@ -100,5 +100,5 @@ func TestENITransformerUpdate(t *testing.T){
 
 	emptyOutput := Output{}
 
-	assert.True(t,reflect.DeepEqual(output, emptyOutput), "Expected an empty Output")
+	assert.True(t, reflect.DeepEqual(output, emptyOutput), "Expected an empty Output")
 }

@@ -7,10 +7,10 @@ import (
 )
 
 type eniConfiguration struct {
-	Description			string		`json:"description"`
-	PrivateIPAddresses 	[]privateIP	`json:"privateIpAddresses"`
-	RequesterID			string		`json:"requesterId"`
-	RequesterManaged	string		`json:"requesterManaged"`
+	Description        string      `json:"description"`
+	PrivateIPAddresses []privateIP `json:"privateIpAddresses"`
+	RequesterID        string      `json:"requesterId"`
+	RequesterManaged   string      `json:"requesterManaged"`
 }
 
 type eniConfigurationDiff struct {
@@ -20,7 +20,7 @@ type eniConfigurationDiff struct {
 }
 
 type privateIP struct {
-	PrivateIPAddress	string		`json:"PrivateIpAddress"`
+	PrivateIPAddress string `json:"PrivateIpAddress"`
 }
 
 type eniTransformer struct{}
@@ -68,7 +68,7 @@ func (t eniTransformer) Delete(event awsConfigEvent) (Output, error) {
 		return Output{}, errors.New("Invalid configuration diff")
 	}
 	var configDiff eniConfigurationDiff
-	if err:= json.Unmarshal(configDiffRaw, &configDiff); err != nil {
+	if err := json.Unmarshal(configDiffRaw, &configDiff); err != nil {
 		return Output{}, err
 	}
 
@@ -91,7 +91,7 @@ func extractEniInfo(config *eniConfiguration) Change {
 	// I in general am not a fan of this, but the only other thing I could think of was
 	// regex matching which doesn't seem any better
 	pieces := strings.Split(config.Description, " ")
-	change.RelatedResource = append(change.RelatedResource, pieces[len(pieces) -1])
+	change.RelatedResource = append(change.RelatedResource, pieces[len(pieces)-1])
 
 	return change
 }
