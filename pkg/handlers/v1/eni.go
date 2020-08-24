@@ -10,7 +10,7 @@ type eniConfiguration struct {
 	Description        string      `json:"description"`
 	PrivateIPAddresses []privateIP `json:"privateIpAddresses"`
 	RequesterID        string      `json:"requesterId"`
-	RequesterManaged   string      `json:"requesterManaged"`
+	RequesterManaged   bool        `json:"requesterManaged"`
 }
 
 type eniConfigurationDiff struct {

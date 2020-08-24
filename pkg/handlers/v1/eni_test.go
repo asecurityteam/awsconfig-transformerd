@@ -29,9 +29,9 @@ func TestTransformENI(t *testing.T) {
 				ARN:          "arn:aws:ec2:ap-southeast-2:123456789:network-interface/eni-abcdefghi1234567",
 				Changes: []Change{
 					{
-						PrivateIPAddresses: []string{"10.111.2.333"},
+						PrivateIPAddresses: []string{"10.111.222.333"},
 						RelatedResource:    []string{"micros-sec-example-ELB-AAAAAA11111"},
-						ChangeType:         create,
+						ChangeType:         added,
 					},
 				},
 			},
@@ -49,7 +49,7 @@ func TestTransformENI(t *testing.T) {
 					{
 						PrivateIPAddresses: []string{"10.111.222.333"},
 						RelatedResource:    []string{"app/marketp-ALB-eeeeeee5555555/ffffffff66666666"},
-						ChangeType:         delete,
+						ChangeType:         deleted,
 					},
 				},
 			},
