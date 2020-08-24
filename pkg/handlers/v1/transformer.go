@@ -64,8 +64,8 @@ type Change struct {
 	// Hostnames show changed public DNS names
 	Hostnames []string `json:"hostnames,omitempty"`
 
-	// RelatedResource show a related arn_id. ex: an ELB the ENI is attached to
-	RelatedResource []string `json: "relatedResource,omitempty"`
+	// RelatedResources show a related arn_id. ex: an ELB the ENI is attached to
+	RelatedResources []string `json: "relatedResources,omitempty"`
 
 	// ChangeType indicates the type of change which occurred. Allowed values are "ADDED" or "DELETED"
 	ChangeType string `json:"changeType"`
@@ -104,6 +104,7 @@ func (t *Transformer) Handle(ctx context.Context, input Input) (Output, error) {
 		// ALB Config events have the same as ELBs
 		output, err = transformOutput(event, elbTransformer{})
 	case configservice.ResourceTypeAwsEc2NetworkInterface:
+		// TODO could I filter here?
 		output, err = transformOutput(event, eniTransformer{})
 	default:
 		t.LogFn(ctx).Info(logs.UnsupportedResource{Resource: event.ConfigurationItem.ResourceType})

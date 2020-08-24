@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+const elbManaged = "amazon-elb"
+
 type eniConfiguration struct {
 	Description        string      `json:"description"`
 	PrivateIPAddresses []privateIP `json:"privateIpAddresses"`
@@ -35,12 +37,14 @@ func (t eniTransformer) Create(event awsConfigEvent) (Output, error) {
 	if err := json.Unmarshal(event.ConfigurationItem.Configuration, &config); err != nil {
 		return Output{}, err
 	}
+
+	// TODO: Can I return this fine? Will this stop being processed like I expect?
+	if config.RequesterManaged == false || config.RequesterID != elbManaged {
+		return Output{}, nil
+	}
 	change := extractEniInfo(&config)
 	change.ChangeType = added
 	output.Changes = append(output.Changes, change)
-
-	// TODO: Check requesterId and requesterManaged. If they fail can I return Output{} and be fine?
-	// Check with Denise maybe about how EC2 events are filtered? I couldn't figure it out at a glance
 
 	return output, nil
 }
@@ -50,8 +54,20 @@ func (t eniTransformer) Update(event awsConfigEvent) (Output, error) {
 	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/requester-managed-eni.html
 	// This page implies that they can only exist while attached to whatever requested them
 
-	// Does this have unintended consequences?
-	return Output{}, nil
+	output, err := getBaseOutput(event.ConfigurationItem)
+	if err != nil {
+		return Output{}, err
+	}
+
+	// We don't care about this config outside of checking if it's requesterManaged or has the right ID
+	var config eniConfiguration
+	if err := json.Unmarshal(event.ConfigurationItem.Configuration, &config); err != nil {
+		return Output{}, err
+	}
+	if config.RequesterManaged == false || config.RequesterID != elbManaged {
+		return Output{}, nil
+	}
+	return output, nil
 }
 
 func (t eniTransformer) Delete(event awsConfigEvent) (Output, error) {
@@ -62,6 +78,7 @@ func (t eniTransformer) Delete(event awsConfigEvent) (Output, error) {
 
 	changeProps := event.ConfigurationItemDiff.ChangedProperties
 	// TODO: Can ARN be null in the ENI config like EC2?
+	// TODO: Get a sample requesterManaged ENI event with tags. I'm not sure if we need tagSet for previousValue
 
 	configDiffRaw, ok := changeProps["Configuration"]
 	if !ok {
@@ -70,6 +87,10 @@ func (t eniTransformer) Delete(event awsConfigEvent) (Output, error) {
 	var configDiff eniConfigurationDiff
 	if err := json.Unmarshal(configDiffRaw, &configDiff); err != nil {
 		return Output{}, err
+	}
+
+	if configDiff.PreviousValue.RequesterManaged == false || configDiff.PreviousValue.RequesterID != elbManaged {
+		return Output{}, nil
 	}
 
 	change := extractEniInfo(configDiff.PreviousValue)
@@ -91,7 +112,7 @@ func extractEniInfo(config *eniConfiguration) Change {
 	// I in general am not a fan of this, but the only other thing I could think of was
 	// regex matching which doesn't seem any better
 	pieces := strings.Split(config.Description, " ")
-	change.RelatedResource = append(change.RelatedResource, pieces[len(pieces)-1])
+	change.RelatedResources = append(change.RelatedResources, pieces[len(pieces)-1])
 
 	return change
 }

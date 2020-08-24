@@ -172,6 +172,10 @@ components:
           type: array
           items:
             type: string
+        relatedResources:
+          type: array
+          items:
+            type: string
         changeType:
           type: string
           enum: [ADDED, DELETED]
