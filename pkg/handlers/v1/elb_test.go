@@ -194,7 +194,7 @@ func TestELBTransformerCreate(t *testing.T) {
 		ExpectedError  error
 	}{
 		{
-			Name: "elb-unmarsall-error",
+			Name: "elb-unmarshall-error",
 			Event: awsConfigEvent{
 				ConfigurationItem: configurationItem{
 					AWSAccountID:                 "123456789012",

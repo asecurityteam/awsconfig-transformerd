@@ -8,8 +8,8 @@ import (
 
 type eniConfiguration struct {
 	Description			string		`json:"description"`
-	PrivateIPAddresses 	[]privateIp	`json:"privateIpAddresses"`
-	RequesterId			string		`json:"requesterId"`
+	PrivateIPAddresses 	[]privateIP	`json:"privateIpAddresses"`
+	RequesterID			string		`json:"requesterId"`
 	RequesterManaged	string		`json:"requesterManaged"`
 }
 
@@ -19,8 +19,8 @@ type eniConfigurationDiff struct {
 	ChangeType    string            `json:"changeType"`
 }
 
-type privateIp struct {
-	PrivateIpAddress	string		`json:"PrivateIpAddress"`
+type privateIP struct {
+	PrivateIPAddress	string		`json:"PrivateIpAddress"`
 }
 
 type eniTransformer struct{}
@@ -82,11 +82,11 @@ func extractEniInfo(config *eniConfiguration) Change {
 	change := Change{}
 
 	// All our sample data only has one privateIp, but it is possible to have multiple
-	privateIps := []string{}
-	for _, privateIp := range config.PrivateIPAddresses {
-		privateIps = append(privateIps, privateIp.PrivateIpAddress)
+	privateIPs := []string{}
+	for _, privateIP := range config.PrivateIPAddresses {
+		privateIPs = append(privateIPs, privateIP.PrivateIPAddress)
 	}
-	change.PrivateIPAddresses = append(change.PrivateIPAddresses, privateIps...)
+	change.PrivateIPAddresses = append(change.PrivateIPAddresses, privateIPs...)
 
 	// I in general am not a fan of this, but the only other thing I could think of was
 	// regex matching which doesn't seem any better
