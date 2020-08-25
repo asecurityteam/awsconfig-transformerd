@@ -38,7 +38,6 @@ func (t eniTransformer) Create(event awsConfigEvent) (Output, error) {
 		return Output{}, err
 	}
 
-	// TODO: Can I return this fine? Will this stop being processed like I expect?
 	if config.RequesterManaged == false || config.RequesterID != elbManaged {
 		return Output{}, nil
 	}
@@ -59,7 +58,7 @@ func (t eniTransformer) Update(event awsConfigEvent) (Output, error) {
 		return Output{}, err
 	}
 
-	// We don't care about this config outside of checking if it's requesterManaged or has the right ID
+	// We don't care about this config outside of checking if it's requesterManaged or has the right requester type
 	var config eniConfiguration
 	if err := json.Unmarshal(event.ConfigurationItem.Configuration, &config); err != nil {
 		return Output{}, err

@@ -104,7 +104,6 @@ func (t *Transformer) Handle(ctx context.Context, input Input) (Output, error) {
 		// ALB Config events have the same as ELBs
 		output, err = transformOutput(event, elbTransformer{})
 	case configservice.ResourceTypeAwsEc2NetworkInterface:
-		// TODO could I filter here?
 		output, err = transformOutput(event, eniTransformer{})
 	default:
 		t.LogFn(ctx).Info(logs.UnsupportedResource{Resource: event.ConfigurationItem.ResourceType})
