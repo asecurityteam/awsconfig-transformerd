@@ -38,9 +38,10 @@ func (t eniTransformer) Create(event awsConfigEvent) (Output, error) {
 		return Output{}, err
 	}
 
-	if config.RequesterManaged == false || config.RequesterID != elbManaged {
-		return Output{}, nil
+	if filter(config) {
+		return output, nil
 	}
+
 	change := extractEniInfo(&config)
 	change.ChangeType = added
 	output.Changes = append(output.Changes, change)
@@ -48,24 +49,22 @@ func (t eniTransformer) Create(event awsConfigEvent) (Output, error) {
 	return output, nil
 }
 
+// Returns true if we should filter this event due to not being requester managed
+func filter(config eniConfiguration) bool {
+	return config.RequesterManaged == false || config.RequesterID != elbManaged
+}
+
 func (t eniTransformer) Update(event awsConfigEvent) (Output, error) {
 	// I don't think requesterManaged ENIs can update in the traditional sense
 	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/requester-managed-eni.html
 	// This page implies that they can only exist while attached to whatever requested them
+	// Because this is effectively a no-op no matter what, we don't need to filter for now
 
 	output, err := getBaseOutput(event.ConfigurationItem)
 	if err != nil {
 		return Output{}, err
 	}
 
-	// We don't care about this config outside of checking if it's requesterManaged or has the right requester type
-	var config eniConfiguration
-	if err := json.Unmarshal(event.ConfigurationItem.Configuration, &config); err != nil {
-		return Output{}, err
-	}
-	if config.RequesterManaged == false || config.RequesterID != elbManaged {
-		return Output{}, nil
-	}
 	return output, nil
 }
 
@@ -87,9 +86,8 @@ func (t eniTransformer) Delete(event awsConfigEvent) (Output, error) {
 	if err := json.Unmarshal(configDiffRaw, &configDiff); err != nil {
 		return Output{}, err
 	}
-
-	if configDiff.PreviousValue.RequesterManaged == false || configDiff.PreviousValue.RequesterID != elbManaged {
-		return Output{}, nil
+	if filter(*configDiff.PreviousValue) {
+		return output, nil
 	}
 
 	change := extractEniInfo(configDiff.PreviousValue)

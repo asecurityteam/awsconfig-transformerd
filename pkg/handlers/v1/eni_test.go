@@ -110,7 +110,6 @@ func TestFilterENI(t *testing.T) {
 	}
 
 	filteredConfigItem := configurationItem{
-		Configuration:                json.RawMessage(jsonFilteredConfig),
 		AWSAccountID:                 "123456789",
 		ResourceType:                 "AWS::EC2::NetworkInterface",
 		ARN:                          "arn:aws:ec2:us-east-1:12345678910:network-interface/eni-hhhhhhh888888",
@@ -123,30 +122,31 @@ func TestFilterENI(t *testing.T) {
 	}
 
 	transformer := eniTransformer{}
-	emptyOutput := Output{}
 
-	createOutput, err := transformer.Create(filteredConfigEvent)
-	assert.Nil(t, err)
-	assert.True(t, reflect.DeepEqual(createOutput, emptyOutput), "Expected empty output due to filtering")
+	t.Run("eni-created", func(t *testing.T) {
+		filteredConfigEvent.ConfigurationItem.Configuration = json.RawMessage(jsonFilteredConfig)
 
-	updateOutput, err := transformer.Update(filteredConfigEvent)
-	assert.Nil(t, err)
-	assert.True(t, reflect.DeepEqual(updateOutput, emptyOutput), "Expected empty output due to filtering")
+		createOutput, err := transformer.Create(filteredConfigEvent)
+		assert.Nil(t, err)
+		assert.True(t, createOutput.Changes == nil, "Expected empty changes due to filtering")
+	})
 
-	// Because deleting looks at the PreviousValue for filtering, the previous configuration does not matter
-	filteredConfigDiff := eniConfigurationDiff{PreviousValue: &filteredConfig}
-	jsonFilteredConfigDiff, err := json.Marshal(filteredConfigDiff)
-	if err != nil {
-		print("Could not marshal test struct")
-	}
+	t.Run("eni-deleted", func(t *testing.T) {
+		// Because deleting looks at the PreviousValue for filtering, we need some more set up
+		filteredConfigDiff := eniConfigurationDiff{PreviousValue: &filteredConfig}
+		jsonFilteredConfigDiff, err := json.Marshal(filteredConfigDiff)
+		if err != nil {
+			print("Could not marshal test struct")
+		}
 
-	filteredConfigEvent.ConfigurationItemDiff = configurationItemDiff{
-		ChangedProperties: map[string]json.RawMessage{
-			"Configuration": json.RawMessage(jsonFilteredConfigDiff),
-		},
-	}
+		filteredConfigEvent.ConfigurationItemDiff = configurationItemDiff{
+			ChangedProperties: map[string]json.RawMessage{
+				"Configuration": json.RawMessage(jsonFilteredConfigDiff),
+			},
+		}
 
-	deleteOutput, err := transformer.Delete(filteredConfigEvent)
-	assert.Nil(t, err)
-	assert.True(t, reflect.DeepEqual(deleteOutput, emptyOutput), "Expected empty output due to filtering")
+		deleteOutput, err := transformer.Delete(filteredConfigEvent)
+		assert.Nil(t, err)
+		assert.True(t, deleteOutput.Changes == nil, "Expected empty changes due to filtering")
+	})
 }
