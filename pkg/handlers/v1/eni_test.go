@@ -161,7 +161,7 @@ func TestErrorENI(t *testing.T) {
 	}
 
 	malformedConfigEvent := awsConfigEvent{
-		ConfigurationItem:        malformedConfigItem,
+		ConfigurationItem: malformedConfigItem,
 	}
 
 	transformer := eniTransformer{}
