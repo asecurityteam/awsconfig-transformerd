@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-const elbManaged = "amazon-elb"
+const elbRequester = "amazon-elb"
 
 type eniConfiguration struct {
 	Description        string      `json:"description"`
@@ -51,11 +51,11 @@ func (t eniTransformer) Create(event awsConfigEvent) (Output, error) {
 
 // Returns true if we should filter this event due to not being requester managed
 func filter(config eniConfiguration) bool {
-	return config.RequesterManaged == false || config.RequesterID != elbManaged
+	return config.RequesterManaged == false || config.RequesterID != elbRequester
 }
 
 func (t eniTransformer) Update(event awsConfigEvent) (Output, error) {
-	// I don't think requesterManaged ENIs can update in the traditional sense
+	// I don't think requester managed ENIs can update in the traditional sense
 	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/requester-managed-eni.html
 	// This page implies that they can only exist while attached to whatever requested them
 	// Because this is effectively a no-op no matter what, we don't need to filter for now
@@ -75,8 +75,6 @@ func (t eniTransformer) Delete(event awsConfigEvent) (Output, error) {
 	}
 
 	changeProps := event.ConfigurationItemDiff.ChangedProperties
-	// TODO: Can ARN be null in the ENI config like EC2?
-	// TODO: Get a sample requesterManaged ENI event with tags. I'm not sure if we need tagSet for previousValue
 
 	configDiffRaw, ok := changeProps["Configuration"]
 	if !ok {
@@ -106,8 +104,6 @@ func extractEniInfo(config *eniConfiguration) Change {
 	}
 	change.PrivateIPAddresses = append(change.PrivateIPAddresses, privateIPs...)
 
-	// I in general am not a fan of this, but the only other thing I could think of was
-	// regex matching which doesn't seem any better
 	pieces := strings.Split(config.Description, " ")
 	change.RelatedResources = append(change.RelatedResources, pieces[len(pieces)-1])
 

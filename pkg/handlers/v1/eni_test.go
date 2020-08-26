@@ -101,7 +101,7 @@ func TestFilterENI(t *testing.T) {
 	filteredConfig := eniConfiguration{
 		Description:        "ELB app/never-used",
 		PrivateIPAddresses: nil,
-		RequesterID:        elbManaged,
+		RequesterID:        elbRequester,
 		RequesterManaged:   false,
 	}
 	jsonFilteredConfig, err := json.Marshal(filteredConfig)
@@ -153,7 +153,7 @@ func TestFilterENI(t *testing.T) {
 
 func TestErrorENI(t *testing.T) {
 	malformedConfigItem := configurationItem{
-		// excluding AWSAccountID so that we can trip our checks in the transformer
+		// excluding AWSAccountID so that we can cause a missingField error to bubble up from the transformer
 		ResourceType:                 "AWS::EC2::NetworkInterface",
 		ARN:                          "arn:aws:ec2:us-east-1:12345678910:network-interface/eni-hhhhhhh888888",
 		AWSRegion:                    "us-east-1",
@@ -166,21 +166,47 @@ func TestErrorENI(t *testing.T) {
 
 	transformer := eniTransformer{}
 
-	t.Run("malformed-create", func(t *testing.T) {
+	t.Run("malformed-create-event", func(t *testing.T) {
 		_, err := transformer.Create(malformedConfigEvent)
 		assert.NotNil(t, err)
 		assert.Equal(t, err, ErrMissingValue{Field: "AWSAccountID"})
 	})
 
-	t.Run("malformed-update", func(t *testing.T) {
+	t.Run("malformed-update-event", func(t *testing.T) {
 		_, err := transformer.Update(malformedConfigEvent)
 		assert.NotNil(t, err)
 		assert.Equal(t, err, ErrMissingValue{Field: "AWSAccountID"})
 	})
 
-	t.Run("malformed-delete", func(t *testing.T) {
+	t.Run("malformed-delete-event", func(t *testing.T) {
 		_, err := transformer.Delete(malformedConfigEvent)
 		assert.NotNil(t, err)
 		assert.Equal(t, err, ErrMissingValue{Field: "AWSAccountID"})
 	})
+
+	// We would like this to pass evaluation so we can instead test unmarshaling errors for configs
+	malformedConfigEvent.ConfigurationItem.AWSAccountID = "123456789"
+
+	malformedConfiguration := json.RawMessage(`{"requesterManaged": "sure"}`)
+
+	t.Run("malformed-create-config", func(t *testing.T) {
+		malformedConfigEvent.ConfigurationItem.Configuration = malformedConfiguration
+		_, err := transformer.Create(malformedConfigEvent)
+		assert.NotNil(t, err)
+		expected := &json.UnmarshalTypeError{Value: "string", Offset: 27, Type: reflect.TypeOf(false), Struct: "eniConfiguration", Field: "requesterManaged"}
+		assert.Equal(t, expected, err)
+	})
+
+	t.Run("malformed-delete-previousConfig", func(t *testing.T) {
+		malformedConfigEvent.ConfigurationItemDiff = configurationItemDiff{
+			ChangedProperties: map[string]json.RawMessage{
+				"Configuration": json.RawMessage(`{"previousValue": "bad"}`),
+			},
+		}
+		_, err := transformer.Delete(malformedConfigEvent)
+		assert.NotNil(t, err)
+		expected := &json.UnmarshalTypeError{Value: "string", Offset: 23, Type: reflect.TypeOf(eniConfiguration{}), Struct: "eniConfigurationDiff", Field: "previousValue"}
+		assert.Equal(t, expected, err)
+	})
+
 }

@@ -65,7 +65,7 @@ type Change struct {
 	Hostnames []string `json:"hostnames,omitempty"`
 
 	// RelatedResources show a related arn_id. ex: an ELB the ENI is attached to
-	RelatedResources []string `json: "relatedResources,omitempty"`
+	RelatedResources []string `json:"relatedResources,omitempty"`
 
 	// ChangeType indicates the type of change which occurred. Allowed values are "ADDED" or "DELETED"
 	ChangeType string `json:"changeType"`
