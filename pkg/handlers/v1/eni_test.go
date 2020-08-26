@@ -179,7 +179,7 @@ func TestErrorENI(t *testing.T) {
 	})
 
 	t.Run("malformed-delete", func(t *testing.T) {
-		_, err := transformer.Create(malformedConfigEvent)
+		_, err := transformer.Delete(malformedConfigEvent)
 		assert.NotNil(t, err)
 		assert.Equal(t, err, ErrMissingValue{Field: "AWSAccountID"})
 	})
