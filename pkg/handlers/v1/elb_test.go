@@ -431,7 +431,7 @@ func TestELBTransformerDelete(t *testing.T) {
 			ExpectedError:  ErrMissingValue{Field: "AWSAccountID"},
 		},
 		{
-			Name: "elb-unmarsall-error",
+			Name: "elb-unmarshall-error",
 			Event: awsConfigEvent{
 				ConfigurationItem: configurationItem{
 					AWSAccountID:                 "123456789012",
@@ -453,7 +453,7 @@ func TestELBTransformerDelete(t *testing.T) {
 			ExpectedError:  &json.UnmarshalTypeError{Value: "number", Offset: 19, Type: reflect.TypeOf(elbConfiguration{}), Struct: "elbConfigurationDiff", Field: "previousValue"},
 		},
 		{
-			Name: "elb-unmarsall-supplementary-config-error",
+			Name: "elb-unmarshall-supplementary-config-error",
 			Event: awsConfigEvent{
 				ConfigurationItem: configurationItem{
 					AWSAccountID:                 "123456789012",

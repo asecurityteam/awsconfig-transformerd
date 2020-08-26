@@ -150,3 +150,37 @@ func TestFilterENI(t *testing.T) {
 		assert.True(t, deleteOutput.Changes == nil, "Expected empty changes due to filtering")
 	})
 }
+
+func TestErrorENI(t *testing.T) {
+	malformedConfigItem := configurationItem{
+		// excluding AWSAccountID so that we can trip our checks in the transformer
+		ResourceType:                 "AWS::EC2::NetworkInterface",
+		ARN:                          "arn:aws:ec2:us-east-1:12345678910:network-interface/eni-hhhhhhh888888",
+		AWSRegion:                    "us-east-1",
+		ConfigurationItemCaptureTime: "2020-08-21T13:00:01.000Z",
+	}
+
+	malformedConfigEvent := awsConfigEvent{
+		ConfigurationItem:        malformedConfigItem,
+	}
+
+	transformer := eniTransformer{}
+
+	t.Run("malformed-create", func(t *testing.T) {
+		_, err := transformer.Create(malformedConfigEvent)
+		assert.NotNil(t, err)
+		assert.Equal(t, err, ErrMissingValue{Field: "AWSAccountID"})
+	})
+
+	t.Run("malformed-update", func(t *testing.T) {
+		_, err := transformer.Update(malformedConfigEvent)
+		assert.NotNil(t, err)
+		assert.Equal(t, err, ErrMissingValue{Field: "AWSAccountID"})
+	})
+
+	t.Run("malformed-delete", func(t *testing.T) {
+		_, err := transformer.Create(malformedConfigEvent)
+		assert.NotNil(t, err)
+		assert.Equal(t, err, ErrMissingValue{Field: "AWSAccountID"})
+	})
+}
