@@ -140,6 +140,7 @@ components:
       properties:
         changes:
           type: array
+          nullable: true
           items:
             $ref: '#/components/schemas/CloudAssetChange'
         changeTime:
@@ -169,6 +170,10 @@ components:
           items:
             type: string
         hostnames:
+          type: array
+          items:
+            type: string
+        relatedResources:
           type: array
           items:
             type: string

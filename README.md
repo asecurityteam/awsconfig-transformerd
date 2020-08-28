@@ -98,6 +98,13 @@ following JSON specification:
               "type": "string"
             }
           },
+          "relatedResources": {
+            "type": "array",
+            "title": "resources that have a relation to this asset",
+            "items": {
+              "type": "string"
+            }
+          },
           "changeType": {
             "type": "string",
             "title": "the type of change which occurred",
@@ -187,6 +194,10 @@ The current version only supports extracting network changes from:
 * EC2 instances
 * Elastic Load Balancers
 * Application Load Balancers
+* Elastic Network Interfaces
+
+Caveat to this list: Not all ENIs are supported. Currently this targets a subset of them, 
+those that are requester managed.
 
 <a id="markdown-status" name="status"></a>
 ## Status
