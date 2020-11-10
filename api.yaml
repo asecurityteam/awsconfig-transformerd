@@ -177,9 +177,36 @@ components:
           type: array
           items:
             type: string
+        tagChanges:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagChange"
         changeType:
           type: string
-          enum: [ADDED, DELETED]
+          enum: [ ADDED, DELETED ]
+    TagChange:
+      type: object
+      properties: # AWS config uses null value for tag pair if it did not exist or was completely removed, so we follow
+        updatedValue:
+          $ref: "#/components/schemas/Tag"
+        previousValue:
+          $ref: "#/components/schemas/Tag"
+      additionalProperties: false
+      required:
+        - updatedValue
+        - previousValue
+    Tag:
+      type: object
+      required:
+        - key
+        - value
+      additionalProperties: false
+      nullable: true
+      properties:
+        key:
+          type: string
+        value:
+          type: string
     Error:
       type: object
       properties:

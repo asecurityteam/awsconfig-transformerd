@@ -12,6 +12,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var addedTags = []TagChange{
+	{
+		UpdatedValue: &Tag{
+			Key:   "key2",
+			Value: "2",
+		},
+		PreviousValue: nil,
+	},
+	{
+		UpdatedValue: &Tag{
+			Key:   "key1",
+			Value: "1",
+		},
+		PreviousValue: nil,
+	},
+}
+
 func TestTransformELB(t *testing.T) {
 	tc := []struct {
 		Name           string
@@ -51,6 +68,12 @@ func TestTransformELB(t *testing.T) {
 				Tags: map[string]string{
 					"key1": "1",
 					"key2": "2",
+				},
+				Changes: []Change{
+					{
+						ChangeType: added,
+						TagChanges: []TagChange{addedTags[0]},
+					},
 				},
 			},
 		},
@@ -108,6 +131,12 @@ func TestTransformELB(t *testing.T) {
 					"key1": "1",
 					"key2": "2",
 				},
+				Changes: []Change{
+					{
+						ChangeType: added,
+						TagChanges: addedTags,
+					},
+				},
 			},
 		},
 		{
@@ -154,6 +183,12 @@ func TestTransformELB(t *testing.T) {
 			ExpectedOutput: Output{},
 			ExpectError:    true,
 		},
+		{
+			Name:           "elbv2-malformed-tags",
+			InputFile:      "elbv2.update.malformed-tags.json",
+			ExpectedOutput: Output{},
+			ExpectError:    true,
+		},
 	}
 
 	for _, tt := range tc {
@@ -169,9 +204,9 @@ func TestTransformELB(t *testing.T) {
 			transformer := &Transformer{LogFn: logFn}
 			output, err := transformer.Handle(context.Background(), input)
 			if tt.ExpectError {
-				require.NotNil(t, err)
+				assert.Error(t, err)
 			} else {
-				require.Nil(t, err)
+				assert.NoError(t, err)
 			}
 
 			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
@@ -180,7 +215,9 @@ func TestTransformELB(t *testing.T) {
 			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
 			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
 			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
-			assert.True(t, reflect.DeepEqual(tt.ExpectedOutput.Changes, output.Changes), "The expected changes were different than the result")
+			expected, _ := json.Marshal(tt.ExpectedOutput.Changes)
+			actual, _ := json.Marshal(output.Changes)
+			assert.Equal(t, string(expected), string(actual))
 		})
 	}
 }

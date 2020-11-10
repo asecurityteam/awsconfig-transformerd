@@ -8,11 +8,12 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/asecurityteam/awsconfig-transformerd/pkg/domain"
 	"github.com/asecurityteam/logevent"
 	"github.com/asecurityteam/runhttp"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func logFn(_ context.Context) domain.Logger {
@@ -283,6 +284,63 @@ func TestTransformEC2(t *testing.T) {
 			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
 			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
 			assert.True(t, reflect.DeepEqual(tt.ExpectedOutput.Changes, output.Changes), "The expected changes were different than the result")
+		})
+	}
+}
+
+func Test_extractTagChanges(t *testing.T) {
+	tests := []struct {
+		name    string
+		ev      configurationItemDiff
+		want    []TagChange
+		wantErr bool
+	}{
+		{
+			"no tags",
+			configurationItemDiff{
+				ChangedProperties: map[string]json.RawMessage{
+					"Configuration.NotTag.1":                json.RawMessage("Something"),
+					"SupplementaryConfiguration.Over9000.1": json.RawMessage("does not matter"),
+				},
+				ChangeType: "ADD",
+			},
+			make([]TagChange, 0),
+			false,
+		},
+		{
+			"malformed",
+			configurationItemDiff{
+				ChangedProperties: map[string]json.RawMessage{
+					"Configuration.Tags.1": json.RawMessage("not JSON"),
+				},
+				ChangeType: "ADD",
+			},
+			make([]TagChange, 0),
+			true,
+		},
+		{
+			"both nil",
+			configurationItemDiff{
+				ChangedProperties: map[string]json.RawMessage{
+					"Configuration.Tags.1": json.RawMessage("{}"),
+				},
+				ChangeType: "ADD",
+			},
+			make([]TagChange, 0),
+			true,
+		},
+		// happy path is tested via regular add/del events for resources
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := extractTagChanges(tt.ev)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("extractTagChanges() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("extractTagChanges() got = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }
