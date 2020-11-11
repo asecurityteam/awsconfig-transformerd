@@ -3,11 +3,14 @@ package v1
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"strings"
 	"time"
+
+	"github.com/aws/aws-sdk-go/service/configservice"
 
 	"github.com/asecurityteam/awsconfig-transformerd/pkg/domain"
 	"github.com/asecurityteam/awsconfig-transformerd/pkg/logs"
-	"github.com/aws/aws-sdk-go/service/configservice"
 )
 
 const (
@@ -67,8 +70,23 @@ type Change struct {
 	// RelatedResources show a related arn_id. ex: an ELB the ENI is attached to
 	RelatedResources []string `json:"relatedResources,omitempty"`
 
+	// TagChanges changed keys/values per tag
+	TagChanges []TagChange `json:"tagChanges"`
+
 	// ChangeType indicates the type of change which occurred. Allowed values are "ADDED" or "DELETED"
 	ChangeType string `json:"changeType"`
+}
+
+// TagChange represents a modification, addition or deletion of a resource tag key or value
+type TagChange struct {
+	UpdatedValue  *Tag `json:"updatedValue"` // pointer type as either of the values can be nil
+	PreviousValue *Tag `json:"previousValue"`
+}
+
+// Tag represents a single AWS resource tag (key:value pair)
+type Tag struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
 
 // Transformer is a lambda handler which transforms incoming AWS Config change events
@@ -111,9 +129,45 @@ func (t *Transformer) Handle(ctx context.Context, input Input) (Output, error) {
 
 	if err != nil {
 		t.LogFn(ctx).Error(logs.TransformError{Reason: err.Error()})
+		// do not proceed to extract tags if the event is broken/malformed
+		return Output{}, err
+	}
+
+	tagChanges, err := extractTagChanges(event.ConfigurationItemDiff)
+	if err != nil {
+		t.LogFn(ctx).Error(logs.TransformError{Reason: err.Error()})
+		return Output{}, err
+	}
+	if len(tagChanges) > 0 {
+		op := added
+		if event.MessageType == delete {
+			op = deleted
+		}
+		output.Changes = append(output.Changes, Change{
+			TagChanges: tagChanges,
+			ChangeType: op,
+		})
 	}
 
 	return output, err
+}
+
+func extractTagChanges(ev configurationItemDiff) ([]TagChange, error) {
+	res := make([]TagChange, 0)
+	for k, v := range ev.ChangedProperties {
+		if !strings.HasPrefix(k, "Configuration.Tags.") && !strings.HasPrefix(k, "SupplementaryConfiguration.Tags.") {
+			continue
+		}
+		var tc TagChange
+		if err := json.Unmarshal(v, &tc); err != nil {
+			return nil, err
+		}
+		if tc.PreviousValue == nil && tc.UpdatedValue == nil {
+			return nil, fmt.Errorf("malformed tag change event")
+		}
+		res = append(res, tc)
+	}
+	return res, nil
 }
 
 // ResourceTransformer takes AWS Config Events, and returns transformed
