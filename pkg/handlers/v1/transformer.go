@@ -71,7 +71,7 @@ type Change struct {
 	RelatedResources []string `json:"relatedResources,omitempty"`
 
 	// TagChanges changed keys/values per tag
-	TagChanges []TagChange `json:"tagChanges"`
+	TagChanges []TagChange `json:"tagChanges,omitempty"`
 
 	// ChangeType indicates the type of change which occurred. Allowed values are "ADDED" or "DELETED"
 	ChangeType string `json:"changeType"`
@@ -155,7 +155,9 @@ func (t *Transformer) Handle(ctx context.Context, input Input) (Output, error) {
 func extractTagChanges(ev configurationItemDiff) ([]TagChange, error) {
 	res := make([]TagChange, 0)
 	for k, v := range ev.ChangedProperties {
-		if !strings.HasPrefix(k, "Configuration.Tags.") && !strings.HasPrefix(k, "SupplementaryConfiguration.Tags.") {
+		if !strings.HasPrefix(k, "Configuration.Tags.") &&
+			!strings.HasPrefix(k, "SupplementaryConfiguration.Tags.") &&
+			!strings.HasPrefix(k, "Tags.") {
 			continue
 		}
 		var tc TagChange
