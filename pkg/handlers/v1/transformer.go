@@ -71,7 +71,7 @@ type Change struct {
 	RelatedResources []string `json:"relatedResources,omitempty"`
 
 	// TagChanges changed keys/values per tag
-	TagChanges []TagChange `json:"tagChanges",omitempty`
+	TagChanges []TagChange `json:"tagChanges,omitempty"`
 
 	// ChangeType indicates the type of change which occurred. Allowed values are "ADDED" or "DELETED"
 	ChangeType string `json:"changeType"`
