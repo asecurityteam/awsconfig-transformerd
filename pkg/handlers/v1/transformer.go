@@ -155,7 +155,9 @@ func (t *Transformer) Handle(ctx context.Context, input Input) (Output, error) {
 func extractTagChanges(ev configurationItemDiff) ([]TagChange, error) {
 	res := make([]TagChange, 0)
 	for k, v := range ev.ChangedProperties {
-		if !strings.HasPrefix(k, "Configuration.Tags.") && !strings.HasPrefix(k, "SupplementaryConfiguration.Tags.") {
+		if !strings.HasPrefix(k, "Configuration.Tags.")  &&
+			!strings.HasPrefix(k, "SupplementaryConfiguration.Tags.") &&
+		    !strings.HasPrefix(k, "Tags.") {
 			continue
 		}
 		var tc TagChange
