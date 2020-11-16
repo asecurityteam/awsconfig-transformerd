@@ -311,7 +311,7 @@ func Test_extractTagChanges(t *testing.T) {
 			"malformed",
 			configurationItemDiff{
 				ChangedProperties: map[string]json.RawMessage{
-					"Configuration.Tags.1": json.RawMessage("not JSON"),
+					"Configuration.TagSet.1": json.RawMessage("not JSON"),
 				},
 				ChangeType: "ADD",
 			},
@@ -322,7 +322,7 @@ func Test_extractTagChanges(t *testing.T) {
 			"both nil",
 			configurationItemDiff{
 				ChangedProperties: map[string]json.RawMessage{
-					"Configuration.Tags.1": json.RawMessage("{}"),
+					"Configuration.TagSet.1": json.RawMessage("{}"),
 				},
 				ChangeType: "ADD",
 			},
