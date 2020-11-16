@@ -15,15 +15,15 @@ import (
 var addedTags = []TagChange{
 	{
 		UpdatedValue: &Tag{
-			Key:   "key2",
-			Value: "2",
+			Key:   "key1",
+			Value: "1",
 		},
 		PreviousValue: nil,
 	},
 	{
 		UpdatedValue: &Tag{
-			Key:   "key1",
-			Value: "1",
+			Key:   "key2",
+			Value: "2",
 		},
 		PreviousValue: nil,
 	},
@@ -215,9 +215,7 @@ func TestTransformELB(t *testing.T) {
 			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
 			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
 			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
-			expected, _ := json.Marshal(tt.ExpectedOutput.Changes)
-			actual, _ := json.Marshal(output.Changes)
-			assert.Equal(t, string(expected), string(actual))
+			assert.Equal(t, tt.ExpectedOutput.Changes, tt.ExpectedOutput.Changes)
 		})
 	}
 }
