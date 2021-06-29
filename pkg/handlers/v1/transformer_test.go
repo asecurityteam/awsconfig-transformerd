@@ -57,35 +57,37 @@ func TestTransformEC2(t *testing.T) {
 	tc := []struct {
 		Name           string
 		InputFile      string
-		ExpectedOutput Output
+		ExpectedOutput []Output
 		ExpectError    bool
 	}{
 		{
 			Name:      "ec2-created",
-			InputFile: "ec2.0.json",
-			ExpectedOutput: Output{
-				AccountID:    "123456789012",
-				ChangeTime:   "2019-02-22T20:43:10.208Z",
-				Region:       "us-west-2",
-				ResourceType: "AWS::EC2::Instance",
-				ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
-				Tags: map[string]string{
-					"business_unit": "CISO-Security",
-					"service_name":  "foo-bar",
-				},
-				Changes: []Change{
-					{
-						PrivateIPAddresses: []string{"172.31.30.79"},
-						PublicIPAddresses:  []string{"34.222.120.66"},
-						Hostnames:          []string{"ec2-34-222-120-66.us-west-2.compute.amazonaws.com"},
-						ChangeType:         "ADDED",
+			InputFile: "ec2.0.json", // Has 1 ENI, expect 1 Output returned
+			ExpectedOutput: []Output{
+				{
+					AccountID:    "123456789012",
+					ChangeTime:   "2019-02-22T20:43:10.208Z",
+					Region:       "us-west-2",
+					ResourceType: "AWS::EC2::Instance",
+					ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
+					Tags: map[string]string{
+						"business_unit": "CISO-Security",
+						"service_name":  "foo-bar",
 					},
-				},
+					Changes: []Change{
+						{
+							PrivateIPAddresses: []string{"172.31.30.79"},
+							PublicIPAddresses:  []string{"34.222.120.66"},
+							Hostnames:          []string{"ec2-34-222-120-66.us-west-2.compute.amazonaws.com"},
+							ChangeType:         "ADDED",
+						}
+					},
+				}
 			},
 		},
 		{
 			Name:      "ec2-stopped",
-			InputFile: "ec2.1.json",
+			InputFile: "ec2.1.json", // Delete event, expect 1 Output returned
 			ExpectedOutput: Output{
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T20:48:32.538Z",
@@ -108,7 +110,7 @@ func TestTransformEC2(t *testing.T) {
 		},
 		{
 			Name:      "ec2-restarted",
-			InputFile: "ec2.2.json",
+			InputFile: "ec2.2.json", // 1 add, 1 delete event --> expect 2 Outputs returned
 			ExpectedOutput: Output{
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T21:02:18.758Z",
@@ -131,7 +133,7 @@ func TestTransformEC2(t *testing.T) {
 		},
 		{
 			Name:      "ec2-stopped-again",
-			InputFile: "ec2.3.json",
+			InputFile: "ec2.3.json", // 1 delete, 1 add --> expect 2 Outputs returned
 			ExpectedOutput: Output{
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T21:17:53.073Z",
@@ -154,7 +156,7 @@ func TestTransformEC2(t *testing.T) {
 		},
 		{
 			Name:      "ec2-terminated",
-			InputFile: "ec2.4.json",
+			InputFile: "ec2.4.json", // Delete, expect 1 Output returned
 			ExpectedOutput: Output{
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T21:31:57.042Z",
@@ -175,7 +177,7 @@ func TestTransformEC2(t *testing.T) {
 		},
 		{
 			Name:      "ec2-created-notags",
-			InputFile: "ec2.5.json",
+			InputFile: "ec2.5.json", // Has 1 ENI, expect 1 Output returned
 			ExpectedOutput: Output{
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T20:43:10.208Z",
@@ -194,7 +196,7 @@ func TestTransformEC2(t *testing.T) {
 		},
 		{
 			Name:      "ec2-terminated-notags",
-			InputFile: "ec2.6.json",
+			InputFile: "ec2.6.json", // Delete, expect 1 Output returned
 			ExpectedOutput: Output{
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T21:31:57.042Z",
@@ -216,7 +218,7 @@ func TestTransformEC2(t *testing.T) {
 		},
 		{
 			Name:      "ec2-deleted-configuration",
-			InputFile: "ec2.deleted.json",
+			InputFile: "ec2.deleted.json", // Delete event, expect 1 Output returned
 			ExpectedOutput: Output{
 				AccountID:    "752631980301",
 				ChangeTime:   "2019-12-11T01:00:29.000Z",

@@ -202,13 +202,13 @@ func TestTransformELB(t *testing.T) {
 			require.Nil(t, err)
 
 			transformer := &Transformer{LogFn: logFn}
-			output, err := transformer.Handle(context.Background(), input)
+			outputs, err := transformer.Handle(context.Background(), input)
 			if tt.ExpectError {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
 			}
-
+			output := outputs[0] // Load balancers will only have one Output struct since they only have one CreatedTime
 			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
 			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
 			assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
@@ -276,13 +276,14 @@ func TestELBTransformerCreate(t *testing.T) {
 		tt := tt
 		t.Run(tt.Name, func(t *testing.T) {
 			et := elbTransformer{}
-			output, err := et.Create(tt.Event)
+			outputs, err := et.Create(tt.Event)
 			if tt.ExpectError {
 				require.NotNil(t, err)
 				assert.Equal(t, tt.ExpectedError, err)
 			} else {
 				require.Nil(t, err)
 			}
+			output := outputs[0] // Load balancers will only have one Output struct since they only have one CreatedTime
 			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
 			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
 			assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
@@ -330,13 +331,14 @@ func TestELBTransformerUpdate(t *testing.T) {
 		tt := tt
 		t.Run(tt.Name, func(t *testing.T) {
 			et := elbTransformer{}
-			output, err := et.Update(tt.Event)
+			outputs, err := et.Update(tt.Event)
 			if tt.ExpectError {
 				require.NotNil(t, err)
 				assert.Equal(t, tt.ExpectedError, err)
 			} else {
 				require.Nil(t, err)
 			}
+			output := outputs[0] // Load balancers will only have one Output struct since they only have one CreatedTime
 			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
 			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
 			assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
@@ -516,13 +518,14 @@ func TestELBTransformerDelete(t *testing.T) {
 		tt := tt
 		t.Run(tt.Name, func(t *testing.T) {
 			et := elbTransformer{}
-			output, err := et.Delete(tt.Event)
+			outputs, err := et.Delete(tt.Event)
 			if tt.ExpectError {
 				require.NotNil(t, err)
 				assert.Equal(t, tt.ExpectedError, err)
 			} else {
 				require.Nil(t, err)
 			}
+			output := outputs[0] // Load balancers will only have one Output struct since they only have one CreatedTime
 			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
 			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
 			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)

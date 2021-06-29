@@ -47,6 +47,9 @@ type networkInterface struct {
 			IPOwnerID     string `json:"ipOwnerId"`
 		} `json:"association"`
 	} `json:"privateIpAddresses"`
+	Attachment struct {
+		AttachTime string `json:"attachTime"`
+	} `json:"attachment"`
 }
 
 type networkInterfaceDiff struct {
@@ -69,32 +72,49 @@ type ec2ChangedPropsARN struct {
 
 type ec2Transformer struct{}
 
-func (t ec2Transformer) Create(event awsConfigEvent) (Output, error) {
-	output, err := getBaseOutput(event.ConfigurationItem)
+func (t ec2Transformer) Create(event awsConfigEvent) ([]Output, error) {
+	outputs := []Output{}
+	baseOutput, err := getBaseOutput(event.ConfigurationItem)
 	if err != nil {
-		return Output{}, err
+		return []Output{}, err
 	}
-
 	// if a resource is created for the first time, there is no diff.
 	// just read the configuration
 	var config ec2Configuration
 	if err := json.Unmarshal(event.ConfigurationItem.Configuration, &config); err != nil {
-		return Output{}, err
+		return []Output{}, err
 	}
-	change := extractEC2NetworkInfo(&config)
-	change.ChangeType = added
-	output.Changes = append(output.Changes, change)
-	return output, nil
+
+	hasEni := false
+	for _, ni := range config.NetworkInterfaces {
+		hasEni = true
+		output := baseOutput
+		change := Change{}
+		output.ChangeTime = ni.Attachment.AttachTime
+		private, public, dns := extractNetworkInterfaceInfo(&ni)
+		change.PrivateIPAddresses = append(change.PrivateIPAddresses, private...)
+		change.PublicIPAddresses = append(change.PublicIPAddresses, public...)
+		change.Hostnames = append(change.Hostnames, dns...)
+		change.ChangeType = added
+		output.Changes = append(output.Changes, change)
+		outputs = append(outputs, output)
+	}
+	if !hasEni {
+		return []Output{}, nil // Reject EC2s with no ENI
+	}
+
+	return outputs, nil
 }
 
-func (t ec2Transformer) Update(event awsConfigEvent) (Output, error) {
-	output, err := getBaseOutput(event.ConfigurationItem)
+func (t ec2Transformer) Update(event awsConfigEvent) ([]Output, error) {
+	outputs := []Output{}
+	baseOutput, err := getBaseOutput(event.ConfigurationItem)
 	if err != nil {
-		return Output{}, err
+		return []Output{}, err
 	}
 
-	addedChange := Change{ChangeType: added}
-	deletedChange := Change{ChangeType: deleted}
+	// addedChange := Change{ChangeType: added}
+	// deletedChange := Change{ChangeType: deleted}
 	// If an update was detected, check to see if any changes to the NetworkInterfaces occurred
 	for k, v := range event.ConfigurationItemDiff.ChangedProperties {
 		if !strings.HasPrefix(k, "Configuration.NetworkInterfaces.") {
@@ -102,36 +122,43 @@ func (t ec2Transformer) Update(event awsConfigEvent) (Output, error) {
 		}
 		var diff networkInterfaceDiff
 		if err := json.Unmarshal(v, &diff); err != nil {
-			return Output{}, err
+			return []Output{}, err
 		}
+		output := baseOutput
 		ni := diff.UpdatedValue
-		changes := &addedChange
+		change := Change{}
+		// changes := &addedChange
 		if diff.ChangeType == delete {
 			ni = diff.PreviousValue
-			changes = &deletedChange
+			// changes = &deletedChange
+		} else {
+			output.ChangeTime = ni.Attachment.AttachTime
 		}
 		private, public, dns := extractNetworkInterfaceInfo(ni)
-		changes.PrivateIPAddresses = append(changes.PrivateIPAddresses, private...)
-		changes.PublicIPAddresses = append(changes.PublicIPAddresses, public...)
-		changes.Hostnames = append(changes.Hostnames, dns...)
+		change.PrivateIPAddresses = append(change.PrivateIPAddresses, private...)
+		change.PublicIPAddresses = append(change.PublicIPAddresses, public...)
+		change.Hostnames = append(change.Hostnames, dns...)
+		outputs = append(outputs, output)
 	}
+
+	// TODO: do we have to remove (not send) add ENI events that also show up as delete events?
 
 	// We need to compute the symmetric difference of the added changes and the removed changes
 	// i.e. remove entries that show up as both added and removed
-	symmetricDifference(&addedChange, &deletedChange)
-	if len(addedChange.PrivateIPAddresses) > 0 || len(addedChange.PublicIPAddresses) > 0 || len(addedChange.Hostnames) > 0 {
-		output.Changes = append(output.Changes, addedChange)
-	}
-	if len(deletedChange.PrivateIPAddresses) > 0 || len(deletedChange.PublicIPAddresses) > 0 || len(deletedChange.Hostnames) > 0 {
-		output.Changes = append(output.Changes, deletedChange)
-	}
-	return output, nil
+	// symmetricDifference(&addedChange, &deletedChange)
+	// if len(addedChange.PrivateIPAddresses) > 0 || len(addedChange.PublicIPAddresses) > 0 || len(addedChange.Hostnames) > 0 {
+	// 	output.Changes = append(output.Changes, addedChange)
+	// }
+	// if len(deletedChange.PrivateIPAddresses) > 0 || len(deletedChange.PublicIPAddresses) > 0 || len(deletedChange.Hostnames) > 0 {
+	// 	output.Changes = append(output.Changes, deletedChange)
+	// }
+	return outputs, nil
 }
 
-func (t ec2Transformer) Delete(event awsConfigEvent) (Output, error) {
+func (t ec2Transformer) Delete(event awsConfigEvent) ([]Output, error) {
 	output, err := getBaseOutput(event.ConfigurationItem)
 	if err != nil {
-		return Output{}, err
+		return []Output{}, err
 	}
 
 	// if a resource is deleted, the tags are no longer present in the base object.
@@ -141,22 +168,22 @@ func (t ec2Transformer) Delete(event awsConfigEvent) (Output, error) {
 	if output.ARN == "" {
 		previousARNRaw, ok := changeProps["ARN"]
 		if !ok {
-			return Output{}, ErrMissingValue{Field: "ARN"}
+			return []Output{}, ErrMissingValue{Field: "ARN"}
 		}
 		var changedPropsARN ec2ChangedPropsARN
 		if err := json.Unmarshal(previousARNRaw, &changedPropsARN); err != nil {
-			return Output{}, err
+			return []Output{}, err
 		}
 		output.ARN = changedPropsARN.PreviousValue
 	}
 
 	configDiffRaw, ok := changeProps["Configuration"]
 	if !ok {
-		return Output{}, errors.New("Invalid configuration diff")
+		return []Output{}, errors.New("Invalid configuration diff")
 	}
 	var configDiff ec2ConfigurationDiff
 	if err := json.Unmarshal(configDiffRaw, &configDiff); err != nil {
-		return Output{}, err
+		return []Output{}, err
 	}
 	for _, tag := range configDiff.PreviousValue.Tags {
 		output.Tags[tag.Key] = tag.Value
@@ -166,7 +193,7 @@ func (t ec2Transformer) Delete(event awsConfigEvent) (Output, error) {
 	change := extractEC2NetworkInfo(configDiff.PreviousValue)
 	change.ChangeType = deleted
 	output.Changes = append(output.Changes, change)
-	return output, nil
+	return []Output{output}, nil
 }
 
 // remove changes that show up as both added and deleted
