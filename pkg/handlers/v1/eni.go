@@ -27,26 +27,27 @@ type privateIP struct {
 
 type eniTransformer struct{}
 
-func (t eniTransformer) Create(event awsConfigEvent) (Output, error) {
+func (t eniTransformer) Create(event awsConfigEvent) ([]Output, error) {
 	output, err := getBaseOutput(event.ConfigurationItem)
 	if err != nil {
-		return Output{}, err
+		return []Output{}, err
 	}
 
 	var config eniConfiguration
 	if err := json.Unmarshal(event.ConfigurationItem.Configuration, &config); err != nil {
-		return Output{}, err
+		return []Output{}, err
 	}
 
 	if filter(config) {
-		return output, nil
+		return []Output{output}, nil
 	}
 
 	change := extractEniInfo(&config)
 	change.ChangeType = added
 	output.Changes = append(output.Changes, change)
+	// TODO: how to find corresponding LB for createdTime?
 
-	return output, nil
+	return []Output{output}, nil
 }
 
 // Returns true if we should filter this event due to not being requester managed
@@ -54,7 +55,7 @@ func filter(config eniConfiguration) bool {
 	return config.RequesterManaged == false || config.RequesterID != elbRequester
 }
 
-func (t eniTransformer) Update(event awsConfigEvent) (Output, error) {
+func (t eniTransformer) Update(event awsConfigEvent) ([]Output, error) {
 	// I don't think requester managed ENIs can update in the traditional sense
 	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/requester-managed-eni.html
 	// This page implies that they can only exist while attached to whatever requested them
@@ -62,36 +63,36 @@ func (t eniTransformer) Update(event awsConfigEvent) (Output, error) {
 
 	output, err := getBaseOutput(event.ConfigurationItem)
 	if err != nil {
-		return Output{}, err
+		return []Output{}, err
 	}
 
-	return output, nil
+	return []Output{output}, nil
 }
 
-func (t eniTransformer) Delete(event awsConfigEvent) (Output, error) {
+func (t eniTransformer) Delete(event awsConfigEvent) ([]Output, error) {
 	output, err := getBaseOutput(event.ConfigurationItem)
 	if err != nil {
-		return Output{}, err
+		return []Output{}, err
 	}
 
 	changeProps := event.ConfigurationItemDiff.ChangedProperties
 
 	configDiffRaw, ok := changeProps["Configuration"]
 	if !ok {
-		return Output{}, errors.New("Invalid configuration diff")
+		return []Output{}, errors.New("Invalid configuration diff")
 	}
 	var configDiff eniConfigurationDiff
 	if err := json.Unmarshal(configDiffRaw, &configDiff); err != nil {
-		return Output{}, err
+		return []Output{}, err
 	}
 	if filter(*configDiff.PreviousValue) {
-		return output, nil
+		return []Output{output}, nil
 	}
 
 	change := extractEniInfo(configDiff.PreviousValue)
 	change.ChangeType = deleted
 	output.Changes = append(output.Changes, change)
-	return output, nil
+	return []Output{output}, nil
 }
 
 func extractEniInfo(config *eniConfiguration) Change {
