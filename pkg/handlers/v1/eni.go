@@ -13,6 +13,7 @@ type eniConfiguration struct {
 	PrivateIPAddresses []privateIP `json:"privateIpAddresses"`
 	RequesterID        string      `json:"requesterId"`
 	RequesterManaged   bool        `json:"requesterManaged"`
+	AttachTime         string      `json:"attachTime"`
 }
 
 type eniConfigurationDiff struct {
@@ -45,7 +46,9 @@ func (t eniTransformer) Create(event awsConfigEvent) ([]Output, error) {
 	change := extractEniInfo(&config)
 	change.ChangeType = added
 	output.Changes = append(output.Changes, change)
-	// TODO: how to find corresponding LB for createdTime?
+	if config.AttachTime != "" {
+		output.ChangeTime = config.AttachTime
+	}
 
 	return []Output{output}, nil
 }
