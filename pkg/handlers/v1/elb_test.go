@@ -33,13 +33,13 @@ func TestTransformELB(t *testing.T) {
 	tc := []struct {
 		Name           string
 		InputFile      string
-		ExpectedOutput Output
+		ExpectedOutput []Output
 		ExpectError    bool
 	}{
 		{
 			Name:      "elb-created",
 			InputFile: "elb.create.json",
-			ExpectedOutput: Output{
+			ExpectedOutput: []Output{{
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-03-27T19:04:27.830Z",
 				Region:       "us-west-2",
@@ -53,13 +53,13 @@ func TestTransformELB(t *testing.T) {
 						Hostnames:  []string{"internal-config-test-elb-01234567.us-west-2.elb.amazonaws.com"},
 						ChangeType: added,
 					},
-				},
+				}},
 			},
 		},
 		{
 			Name:      "elb-updated",
 			InputFile: "elb.update.json",
-			ExpectedOutput: Output{
+			ExpectedOutput: []Output{{
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-03-27T19:04:27.830Z",
 				Region:       "us-west-2",
@@ -74,15 +74,15 @@ func TestTransformELB(t *testing.T) {
 						ChangeType: added,
 						TagChanges: []TagChange{addedTags[0]},
 					},
-				},
+				}},
 			},
 		},
 		{
 			Name:      "elb-deleted",
 			InputFile: "elb.delete.json",
-			ExpectedOutput: Output{
+			ExpectedOutput: []Output{{
 				AccountID:    "123456789012",
-				ChangeTime:   "2019-03-27T19:04:27.830Z",
+				ChangeTime:   "2019-03-27T19:16:23.926Z",
 				Region:       "us-west-2",
 				ResourceType: "AWS::ElasticLoadBalancing::LoadBalancer",
 				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
@@ -95,13 +95,13 @@ func TestTransformELB(t *testing.T) {
 						Hostnames:  []string{"internal-config-test-elb-01234567.us-west-2.elb.amazonaws.com"},
 						ChangeType: deleted,
 					},
-				},
+				}},
 			},
 		},
 		{
 			Name:      "elbv2-created",
 			InputFile: "elbv2.create.json",
-			ExpectedOutput: Output{
+			ExpectedOutput: []Output{{
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-03-27T19:05:52.900Z",
 				Region:       "us-west-2",
@@ -115,15 +115,15 @@ func TestTransformELB(t *testing.T) {
 						Hostnames:  []string{"internal-config-test-alb-012345678.us-west-2.elb.amazonaws.com"},
 						ChangeType: added,
 					},
-				},
+				}},
 			},
 		},
 		{
 			Name:      "elbv2-updated",
 			InputFile: "elbv2.update.json",
-			ExpectedOutput: Output{
+			ExpectedOutput: []Output{{
 				AccountID:    "123456789012",
-				ChangeTime:   "2019-03-27T19:12:03.211Z",
+				ChangeTime:   "2019-03-27T19:05:52.900Z",
 				Region:       "us-west-2",
 				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 				ResourceType: "AWS::ElasticLoadBalancingV2::LoadBalancer",
@@ -136,13 +136,13 @@ func TestTransformELB(t *testing.T) {
 						ChangeType: added,
 						TagChanges: addedTags,
 					},
-				},
+				}},
 			},
 		},
 		{
 			Name:      "elbv2-deleted",
 			InputFile: "elbv2.delete.json",
-			ExpectedOutput: Output{
+			ExpectedOutput: []Output{{
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-03-27T19:16:22.178Z",
 				Region:       "us-west-2",
@@ -157,15 +157,15 @@ func TestTransformELB(t *testing.T) {
 						Hostnames:  []string{"internal-config-test-alb-012345678.us-west-2.elb.amazonaws.com"},
 						ChangeType: deleted,
 					},
-				},
+				}},
 			},
 		},
 		{
 			Name:      "elbv2-created-notags",
 			InputFile: "elbv2.create-notags.json",
-			ExpectedOutput: Output{
+			ExpectedOutput: []Output{{
 				AccountID:    "123456789012",
-				ChangeTime:   "2019-03-27T19:08:40.855Z",
+				ChangeTime:   "2019-03-27T19:05:52.900Z",
 				Region:       "us-west-2",
 				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 				ResourceType: "AWS::ElasticLoadBalancingV2::LoadBalancer",
@@ -174,19 +174,19 @@ func TestTransformELB(t *testing.T) {
 						Hostnames:  []string{"internal-config-test-alb-012345678.us-west-2.elb.amazonaws.com"},
 						ChangeType: added,
 					},
-				},
+				}},
 			},
 		},
 		{
 			Name:           "elb-malformed",
 			InputFile:      "elb.malformed.json",
-			ExpectedOutput: Output{},
+			ExpectedOutput: []Output{},
 			ExpectError:    true,
 		},
 		{
 			Name:           "elbv2-malformed-tags",
 			InputFile:      "elbv2.update.malformed-tags.json",
-			ExpectedOutput: Output{},
+			ExpectedOutput: []Output{},
 			ExpectError:    true,
 		},
 	}
@@ -202,20 +202,21 @@ func TestTransformELB(t *testing.T) {
 			require.Nil(t, err)
 
 			transformer := &Transformer{LogFn: logFn}
-			outputs, err := transformer.Handle(context.Background(), input)
+			output, err := transformer.Handle(context.Background(), input)
 			if tt.ExpectError {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
 			}
-			output := outputs[0] // Load balancers will only have one Output struct since they only have one CreatedTime
-			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
-			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
-			assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
-			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
-			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
-			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
-			assert.Equal(t, tt.ExpectedOutput.Changes, tt.ExpectedOutput.Changes)
+			for i, _ := range tt.ExpectedOutput {
+				assert.Equal(t, tt.ExpectedOutput[i].AccountID, output[i].AccountID)
+				assert.Equal(t, tt.ExpectedOutput[i].Region, output[i].Region)
+				assert.Equal(t, tt.ExpectedOutput[i].ARN, output[i].ARN)
+				assert.Equal(t, tt.ExpectedOutput[i].ResourceType, output[i].ResourceType)
+				assert.Equal(t, tt.ExpectedOutput[i].Tags, output[i].Tags)
+				assert.Equal(t, tt.ExpectedOutput[i].ChangeTime, output[i].ChangeTime)
+				assert.Equal(t, tt.ExpectedOutput[i].Changes, output[i].Changes)
+			}
 		})
 	}
 }
