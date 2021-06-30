@@ -2,11 +2,18 @@ package v1
 
 import (
 	"encoding/json"
+	"strconv"
+	"time"
 )
 
 type elbConfiguration struct {
 	DNSName     string `json:"dnsname"`
 	CreatedTime string `json:"createdTime"`
+}
+
+type elbV1Configuration struct {
+	DNSName     string `json:"dnsname"`
+	CreatedTime int64  `json:"createdTime"` // ELB V1 CreatedTime comes in the form of milliseconds
 }
 
 type elbConfigurationDiff struct {
@@ -29,18 +36,47 @@ func extractELBNetworkInfo(config *elbConfiguration) Change {
 
 type elbTransformer struct{}
 
+func millisToTimestamp(millis int64) string {
+	isoTime := time.Unix(0, millis*int64(time.Millisecond)).Format(time.RFC3339)
+	// Convert timestamp to RFC3339 with milliseconds
+	timeStamp := isoTime[:len(isoTime)-1] + "." + strconv.FormatInt(millis%1000, 10) + "Z"
+	return timeStamp
+}
+
+func unmarshalConfig(event awsConfigEvent) (elbConfiguration, error) {
+	// if a resource is created for the first time, there is no diff.
+	// just read the configuration
+	var config elbConfiguration
+	if event.ConfigurationItem.ResourceType == "AWS::ElasticLoadBalancing::LoadBalancer" {
+		// ELB V1 has createdTime in the form of milliseconds, which is int64 in Go,
+		// so we need to convert to a RFC3339 timestamp string
+		var configv1 elbV1Configuration
+		if err := json.Unmarshal(event.ConfigurationItem.Configuration, &configv1); err != nil {
+			return elbConfiguration{}, err
+		}
+		config.DNSName = configv1.DNSName
+		config.CreatedTime = millisToTimestamp(configv1.CreatedTime)
+	} else {
+		// ELB V2 already has createdTime as a RFC3339 timestamp string with milliseconds,
+		// so we can read it into the struct directly
+		if err := json.Unmarshal(event.ConfigurationItem.Configuration, &config); err != nil {
+			return elbConfiguration{}, err
+		}
+	}
+	return config, nil
+}
+
 func (t elbTransformer) Create(event awsConfigEvent) ([]Output, error) {
 	output, err := getBaseOutput(event.ConfigurationItem)
 	if err != nil {
 		return []Output{}, err
 	}
 
-	// if a resource is created for the first time, there is no diff.
-	// just read the configuration
-	var config elbConfiguration
-	if err := json.Unmarshal(event.ConfigurationItem.Configuration, &config); err != nil {
+	config, err := unmarshalConfig(event)
+	if err != nil {
 		return []Output{}, err
 	}
+
 	change := extractELBNetworkInfo(&config)
 	change.ChangeType = added
 	output.Changes = append(output.Changes, change)
@@ -54,8 +90,8 @@ func (t elbTransformer) Update(event awsConfigEvent) ([]Output, error) {
 	if err != nil {
 		return []Output{}, err
 	}
-	var config elbConfiguration
-	if err := json.Unmarshal(event.ConfigurationItem.Configuration, &config); err != nil {
+	config, err := unmarshalConfig(event)
+	if err != nil {
 		return []Output{}, err
 	}
 	output.ChangeTime = config.CreatedTime

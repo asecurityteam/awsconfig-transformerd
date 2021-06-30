@@ -43,8 +43,8 @@ func TestTransformEmptiness(t *testing.T) {
 	marshaled, _ := json.Marshal(event)
 	transformer := &Transformer{LogFn: logFn}
 	output, err := transformer.Handle(context.Background(), Input{Message: string(marshaled)})
-	assert.Nil(t, err, "expected non-nil")
-	assert.Equal(t, 0, len(output.Changes))
+	assert.NotNil(t, err, "expected non-nil")
+	assert.Equal(t, 0, len(output)) // No Outputs returned
 }
 
 func TestTransformInvalidJSON(t *testing.T) {
@@ -62,33 +62,31 @@ func TestTransformEC2(t *testing.T) {
 	}{
 		{
 			Name:      "ec2-created",
-			InputFile: "ec2.0.json", // Has 1 ENI, expect 1 Output returned
-			ExpectedOutput: []Output{
-				{
-					AccountID:    "123456789012",
-					ChangeTime:   "2019-02-22T20:43:10.208Z",
-					Region:       "us-west-2",
-					ResourceType: "AWS::EC2::Instance",
-					ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
-					Tags: map[string]string{
-						"business_unit": "CISO-Security",
-						"service_name":  "foo-bar",
+			InputFile: "ec2.0.json",
+			ExpectedOutput: []Output{{
+				AccountID:    "123456789012",
+				ChangeTime:   "2019-02-22T20:43:10.208Z",
+				Region:       "us-west-2",
+				ResourceType: "AWS::EC2::Instance",
+				ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
+				Tags: map[string]string{
+					"business_unit": "CISO-Security",
+					"service_name":  "foo-bar",
+				},
+				Changes: []Change{
+					{
+						PrivateIPAddresses: []string{"172.31.30.79"},
+						PublicIPAddresses:  []string{"34.222.120.66"},
+						Hostnames:          []string{"ec2-34-222-120-66.us-west-2.compute.amazonaws.com"},
+						ChangeType:         "ADDED",
 					},
-					Changes: []Change{
-						{
-							PrivateIPAddresses: []string{"172.31.30.79"},
-							PublicIPAddresses:  []string{"34.222.120.66"},
-							Hostnames:          []string{"ec2-34-222-120-66.us-west-2.compute.amazonaws.com"},
-							ChangeType:         "ADDED",
-						}
-					},
-				}
+				}},
 			},
 		},
 		{
 			Name:      "ec2-stopped",
 			InputFile: "ec2.1.json", // Delete event, expect 1 Output returned
-			ExpectedOutput: Output{
+			ExpectedOutput: []Output{{
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T20:48:32.538Z",
 				Region:       "us-west-2",
@@ -105,13 +103,13 @@ func TestTransformEC2(t *testing.T) {
 						Hostnames:          []string{"ec2-34-222-120-66.us-west-2.compute.amazonaws.com"},
 						ChangeType:         "DELETED",
 					},
-				},
+				}},
 			},
 		},
 		{
 			Name:      "ec2-restarted",
 			InputFile: "ec2.2.json", // 1 add, 1 delete event --> expect 2 Outputs returned
-			ExpectedOutput: Output{
+			ExpectedOutput: []Output{{
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T21:02:18.758Z",
 				Region:       "us-west-2",
@@ -128,13 +126,13 @@ func TestTransformEC2(t *testing.T) {
 						Hostnames:          []string{"ec2-34-219-72-29.us-west-2.compute.amazonaws.com"},
 						ChangeType:         "ADDED",
 					},
-				},
+				}},
 			},
 		},
 		{
 			Name:      "ec2-stopped-again",
 			InputFile: "ec2.3.json", // 1 delete, 1 add --> expect 2 Outputs returned
-			ExpectedOutput: Output{
+			ExpectedOutput: []Output{{
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T21:17:53.073Z",
 				Region:       "us-west-2",
@@ -151,13 +149,13 @@ func TestTransformEC2(t *testing.T) {
 						Hostnames:          []string{"ec2-34-219-72-29.us-west-2.compute.amazonaws.com"},
 						ChangeType:         "DELETED",
 					},
-				},
+				}},
 			},
 		},
 		{
 			Name:      "ec2-terminated",
 			InputFile: "ec2.4.json", // Delete, expect 1 Output returned
-			ExpectedOutput: Output{
+			ExpectedOutput: []Output{{
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T21:31:57.042Z",
 				Region:       "us-west-2",
@@ -172,13 +170,13 @@ func TestTransformEC2(t *testing.T) {
 						PrivateIPAddresses: []string{"172.31.30.79"},
 						ChangeType:         "DELETED",
 					},
-				},
+				}},
 			},
 		},
 		{
 			Name:      "ec2-created-notags",
 			InputFile: "ec2.5.json", // Has 1 ENI, expect 1 Output returned
-			ExpectedOutput: Output{
+			ExpectedOutput: []Output{{
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T20:43:10.208Z",
 				Region:       "us-west-2",
@@ -191,13 +189,13 @@ func TestTransformEC2(t *testing.T) {
 						Hostnames:          []string{"ec2-34-222-120-66.us-west-2.compute.amazonaws.com"},
 						ChangeType:         "ADDED",
 					},
-				},
+				}},
 			},
 		},
 		{
 			Name:      "ec2-terminated-notags",
 			InputFile: "ec2.6.json", // Delete, expect 1 Output returned
-			ExpectedOutput: Output{
+			ExpectedOutput: []Output{{
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T21:31:57.042Z",
 				Region:       "us-west-2",
@@ -208,7 +206,7 @@ func TestTransformEC2(t *testing.T) {
 						PrivateIPAddresses: []string{"172.31.30.79"},
 						ChangeType:         "DELETED",
 					},
-				},
+				}},
 			},
 		},
 		{
@@ -219,7 +217,7 @@ func TestTransformEC2(t *testing.T) {
 		{
 			Name:      "ec2-deleted-configuration",
 			InputFile: "ec2.deleted.json", // Delete event, expect 1 Output returned
-			ExpectedOutput: Output{
+			ExpectedOutput: []Output{{
 				AccountID:    "752631980301",
 				ChangeTime:   "2019-12-11T01:00:29.000Z",
 				Region:       "us-west-2",
@@ -251,7 +249,7 @@ func TestTransformEC2(t *testing.T) {
 						Hostnames:          []string{"ec2-52-27-166-73.us-west-2.compute.amazonaws.com"},
 						ChangeType:         "DELETED",
 					},
-				},
+				}},
 			},
 		},
 		{
@@ -279,13 +277,15 @@ func TestTransformEC2(t *testing.T) {
 				require.Nil(t, err)
 			}
 
-			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
-			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
-			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
-			assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
-			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
-			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
-			assert.True(t, reflect.DeepEqual(tt.ExpectedOutput.Changes, output.Changes), "The expected changes were different than the result")
+			for i, _ := range tt.ExpectedOutput {
+				assert.Equal(t, tt.ExpectedOutput[i].AccountID, output[i].AccountID)
+				assert.Equal(t, tt.ExpectedOutput[i].Region, output[i].Region)
+				assert.Equal(t, tt.ExpectedOutput[i].ResourceType, output[i].ResourceType)
+				assert.Equal(t, tt.ExpectedOutput[i].ARN, output[i].ARN)
+				assert.Equal(t, tt.ExpectedOutput[i].Tags, output[i].Tags)
+				assert.Equal(t, tt.ExpectedOutput[i].ChangeTime, output[i].ChangeTime)
+				assert.True(t, reflect.DeepEqual(tt.ExpectedOutput[i].Changes, output[i].Changes), "The expected changes were different than the result")
+			}
 		})
 	}
 }

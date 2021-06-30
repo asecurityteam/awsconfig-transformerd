@@ -41,7 +41,7 @@ func TestTransformELB(t *testing.T) {
 			InputFile: "elb.create.json",
 			ExpectedOutput: Output{
 				AccountID:    "123456789012",
-				ChangeTime:   "2019-03-27T19:06:49.363Z",
+				ChangeTime:   "2019-03-27T19:04:27.830Z",
 				Region:       "us-west-2",
 				ResourceType: "AWS::ElasticLoadBalancing::LoadBalancer",
 				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
@@ -61,7 +61,7 @@ func TestTransformELB(t *testing.T) {
 			InputFile: "elb.update.json",
 			ExpectedOutput: Output{
 				AccountID:    "123456789012",
-				ChangeTime:   "2019-03-27T19:12:28.624Z",
+				ChangeTime:   "2019-03-27T19:04:27.830Z",
 				Region:       "us-west-2",
 				ResourceType: "AWS::ElasticLoadBalancing::LoadBalancer",
 				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
@@ -82,7 +82,7 @@ func TestTransformELB(t *testing.T) {
 			InputFile: "elb.delete.json",
 			ExpectedOutput: Output{
 				AccountID:    "123456789012",
-				ChangeTime:   "2019-03-27T19:16:23.926Z",
+				ChangeTime:   "2019-03-27T19:04:27.830Z",
 				Region:       "us-west-2",
 				ResourceType: "AWS::ElasticLoadBalancing::LoadBalancer",
 				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
@@ -103,7 +103,7 @@ func TestTransformELB(t *testing.T) {
 			InputFile: "elbv2.create.json",
 			ExpectedOutput: Output{
 				AccountID:    "123456789012",
-				ChangeTime:   "2019-03-27T19:08:40.855Z",
+				ChangeTime:   "2019-03-27T19:05:52.900Z",
 				Region:       "us-west-2",
 				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 				ResourceType: "AWS::ElasticLoadBalancingV2::LoadBalancer",
