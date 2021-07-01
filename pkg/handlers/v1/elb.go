@@ -11,9 +11,9 @@ type elbConfiguration struct {
 	CreatedTime string `json:"createdTime"`
 }
 
-type elbV1Configuration struct {
+type elbConfigurationMillis struct {
 	DNSName     string `json:"dnsname"`
-	CreatedTime int64  `json:"createdTime"` // ELB V1 CreatedTime comes in the form of milliseconds
+	CreatedTime int64  `json:"createdTime"`
 }
 
 type elbConfigurationDiff struct {
@@ -37,31 +37,26 @@ func extractELBNetworkInfo(config *elbConfiguration) Change {
 type elbTransformer struct{}
 
 func millisToTimestamp(millis int64) string {
-	isoTime := time.Unix(0, millis*int64(time.Millisecond)).Format(time.RFC3339)
+	isoTime := time.Unix(0, millis*int64(time.Millisecond)).Format(time.RFC3339) // use time.Format custom
 	// Convert timestamp to RFC3339 with milliseconds
 	timeStamp := isoTime[:len(isoTime)-1] + "." + strconv.FormatInt(millis%1000, 10) + "Z"
 	return timeStamp
 }
 
+// Some ELBs have createdTime in the form of milliseconds, which is int64 in Go,
+// so we need to convert those to a RFC3339 timestamp string. This unmarshal function
+// returns an elbConfiguration that uses RFC3339 timestamp string with milliseconds, no matter
+// what kind of timestamp the original config had.
 func unmarshalConfig(rawConfig json.RawMessage, event awsConfigEvent) (elbConfiguration, error) {
-	// if a resource is created for the first time, there is no diff.
-	// just read the configuration
 	var config elbConfiguration
-	if event.ConfigurationItem.ResourceType == "AWS::ElasticLoadBalancing::LoadBalancer" {
-		// ELB V1 has createdTime in the form of milliseconds, which is int64 in Go,
-		// so we need to convert to a RFC3339 timestamp string
-		var configv1 elbV1Configuration
-		if err := json.Unmarshal(rawConfig, &configv1); err != nil {
+	if err := json.Unmarshal(rawConfig, &config); err != nil {
+		// Timestamp came in form of milliseconds, we must convert to timestamp string
+		var configMillis elbConfigurationMillis
+		if err = json.Unmarshal(rawConfig, &configMillis); err != nil {
 			return elbConfiguration{}, err
 		}
-		config.DNSName = configv1.DNSName
-		config.CreatedTime = millisToTimestamp(configv1.CreatedTime)
-	} else {
-		// ELB V2 already has createdTime as a RFC3339 timestamp string with milliseconds,
-		// so we can read it into the struct directly
-		if err := json.Unmarshal(rawConfig, &config); err != nil {
-			return elbConfiguration{}, err
-		}
+		config.DNSName = configMillis.DNSName
+		config.CreatedTime = millisToTimestamp(configMillis.CreatedTime)
 	}
 	return config, nil
 }
@@ -71,7 +66,8 @@ func (t elbTransformer) Create(event awsConfigEvent) ([]Output, error) {
 	if err != nil {
 		return []Output{}, err
 	}
-
+	// if a resource is created for the first time, there is no diff.
+	// just read the configuration
 	config, err := unmarshalConfig(event.ConfigurationItem.Configuration, event)
 	if err != nil {
 		return []Output{}, err

@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -125,6 +126,7 @@ func (t *Transformer) Handle(ctx context.Context, input Input) ([]Output, error)
 		outputs, err = transformOutput(event, eniTransformer{})
 	default:
 		t.LogFn(ctx).Info(logs.UnsupportedResource{Resource: event.ConfigurationItem.ResourceType})
+		err = errors.New("Unsupported resource type; must be one of EC2, ELB, ENI")
 	}
 
 	if err != nil {
@@ -150,7 +152,6 @@ func (t *Transformer) Handle(ctx context.Context, input Input) ([]Output, error)
 			})
 		}
 	}
-
 	return outputs, err
 }
 
@@ -203,5 +204,5 @@ func transformOutput(event awsConfigEvent, resourceTransformer ResourceTransform
 		}
 		return output, nil
 	}
-	return []Output{}, nil
+	return []Output{}, errors.New("Event was not create, update, or delete")
 }
