@@ -145,8 +145,8 @@ func (t *Transformer) Handle(ctx context.Context, input Input) ([]Output, error)
 		if event.MessageType == delete {
 			op = deleted
 		}
-		for _, output := range outputs {
-			output.Changes = append(output.Changes, Change{
+		for i := range outputs {
+			outputs[i].Changes = append(outputs[i].Changes, Change{
 				TagChanges: tagChanges,
 				ChangeType: op,
 			})
