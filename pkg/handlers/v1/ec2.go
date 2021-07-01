@@ -124,12 +124,14 @@ func (t ec2Transformer) Update(event awsConfigEvent) ([]Output, error) {
 		if err := json.Unmarshal(v, &diff); err != nil {
 			return []Output{}, err
 		}
-		output := baseOutput
 		ni := diff.UpdatedValue
+		output := baseOutput
 		change := Change{}
+		change.ChangeType = added
 		// changes := &addedChange
 		if diff.ChangeType == delete {
 			ni = diff.PreviousValue
+			change.ChangeType = deleted
 			// changes = &deletedChange
 		} else {
 			output.ChangeTime = ni.Attachment.AttachTime
@@ -138,10 +140,9 @@ func (t ec2Transformer) Update(event awsConfigEvent) ([]Output, error) {
 		change.PrivateIPAddresses = append(change.PrivateIPAddresses, private...)
 		change.PublicIPAddresses = append(change.PublicIPAddresses, public...)
 		change.Hostnames = append(change.Hostnames, dns...)
+		output.Changes = append(output.Changes, change)
 		outputs = append(outputs, output)
 	}
-
-	// TODO: do we have to remove (not send) add ENI events that also show up as delete events?
 
 	// We need to compute the symmetric difference of the added changes and the removed changes
 	// i.e. remove entries that show up as both added and removed
