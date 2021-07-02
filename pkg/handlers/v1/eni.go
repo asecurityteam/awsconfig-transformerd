@@ -13,7 +13,9 @@ type eniConfiguration struct {
 	PrivateIPAddresses []privateIP `json:"privateIpAddresses"`
 	RequesterID        string      `json:"requesterId"`
 	RequesterManaged   bool        `json:"requesterManaged"`
-	AttachTime         string      `json:"attachTime"`
+	Attachment         struct {
+		AttachTime string `json:"attachTime"`
+	} `json:"attachment"`
 }
 
 type eniConfigurationDiff struct {
@@ -46,8 +48,8 @@ func (t eniTransformer) Create(event awsConfigEvent) ([]Output, error) {
 	change := extractEniInfo(&config)
 	change.ChangeType = added
 	output.Changes = append(output.Changes, change)
-	if config.AttachTime != "" {
-		output.ChangeTime = config.AttachTime
+	if config.Attachment.AttachTime != "" {
+		output.ChangeTime = config.Attachment.AttachTime
 	}
 
 	return []Output{output}, nil
@@ -55,7 +57,7 @@ func (t eniTransformer) Create(event awsConfigEvent) ([]Output, error) {
 
 // Returns true if we should filter this event due to not being requester managed
 func filter(config eniConfiguration) bool {
-	return config.RequesterManaged == false || config.RequesterID != elbRequester
+	return !config.RequesterManaged || config.RequesterID != elbRequester
 }
 
 func (t eniTransformer) Update(event awsConfigEvent) ([]Output, error) {

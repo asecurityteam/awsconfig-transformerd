@@ -42,7 +42,7 @@ func TestTransformENI(t *testing.T) {
 			InputFile: "eni.update.json",
 			ExpectedOutput: Output{
 				AccountID:    "12345678910",
-				ChangeTime:   "2020-08-21T12:30:00.000Z",
+				ChangeTime:   "2020-08-21T12:31:00.000Z",
 				Region:       "eu-central-1",
 				ResourceType: "AWS::EC2::NetworkInterface",
 				ARN:          "arn:aws:ec2:eu-central-1:12345678910:network-interface/eni-eeeeeee8888888",
