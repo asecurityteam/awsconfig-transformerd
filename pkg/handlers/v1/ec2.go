@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+const (
+	private = "privateIps"
+	public  = "publicIps"
+	dns     = "hostnames"
+)
+
 type ec2Configuration struct {
 	InstanceID string `json:"instanceId"`
 	State      struct {
@@ -87,6 +93,7 @@ func (t ec2Transformer) Create(event awsConfigEvent) ([]Output, error) {
 
 	hasEni := false
 	for _, ni := range config.NetworkInterfaces {
+		ni := ni
 		hasEni = true
 		output := baseOutput
 		change := Change{}
@@ -106,15 +113,71 @@ func (t ec2Transformer) Create(event awsConfigEvent) ([]Output, error) {
 	return outputs, nil
 }
 
+func initializeAttachMapEntry(attachMap map[string]map[string][]string, attachTime string) {
+	attachMap[attachTime] = make(map[string][]string)
+	attachMap[attachTime][private] = make([]string, 0)
+	attachMap[attachTime][public] = make([]string, 0)
+	attachMap[attachTime][dns] = make([]string, 0)
+}
+
+func separateAddedChanges(baseOutput Output, addedChange Change, privateIPMap map[string]string, publicIPMap map[string]string, hostnameMap map[string]string) []Output {
+	outputs := make([]Output, 0)
+	// map of attachTimes --> {
+	// "privateIPs": []string
+	// "publicIPs": []string
+	// "hostnames": []string
+	// }
+	attachMap := make(map[string]map[string][]string)
+	// separate IPs & hostnames by attachTime
+	for _, ip := range addedChange.PrivateIPAddresses {
+		attachTime := privateIPMap[ip]
+		if _, ok := attachMap[attachTime]; !ok {
+			initializeAttachMapEntry(attachMap, attachTime)
+		}
+		attachMap[attachTime][private] = append(attachMap[attachTime][private], ip)
+	}
+	for _, ip := range addedChange.PublicIPAddresses {
+		attachTime := publicIPMap[ip]
+		if _, ok := attachMap[attachTime]; !ok {
+			initializeAttachMapEntry(attachMap, attachTime)
+		}
+		attachMap[attachTime][public] = append(attachMap[attachTime][public], ip)
+	}
+	for _, hostname := range addedChange.Hostnames {
+		attachTime := hostnameMap[hostname]
+		if _, ok := attachMap[attachTime]; !ok {
+			initializeAttachMapEntry(attachMap, attachTime)
+		}
+		attachMap[attachTime][dns] = append(attachMap[attachTime][dns], hostname)
+	}
+
+	// create Output structs with each attachTime
+	for attachTime, ipMap := range attachMap {
+		output := baseOutput
+		change := Change{ChangeType: added}
+		change.PrivateIPAddresses = append(change.PrivateIPAddresses, ipMap[private]...)
+		change.PublicIPAddresses = append(change.PublicIPAddresses, ipMap[public]...)
+		change.Hostnames = append(change.Hostnames, ipMap[dns]...)
+		output.Changes = append(output.Changes, change)
+		output.ChangeTime = attachTime
+		outputs = append(outputs, output)
+	}
+
+	return outputs
+}
+
 func (t ec2Transformer) Update(event awsConfigEvent) ([]Output, error) {
-	outputs := []Output{}
+	outputs := make([]Output, 0)
 	baseOutput, err := getBaseOutput(event.ConfigurationItem)
 	if err != nil {
 		return []Output{}, err
 	}
 
-	// addedChange := Change{ChangeType: added}
-	// deletedChange := Change{ChangeType: deleted}
+	addedChange := Change{ChangeType: added}
+	deletedChange := Change{ChangeType: deleted}
+	addPrivateIPMap := make(map[string]string) // IP to attachTime
+	addPublicIPMap := make(map[string]string)
+	addHostnameMap := make(map[string]string)
 	// If an update was detected, check to see if any changes to the NetworkInterfaces occurred
 	for k, v := range event.ConfigurationItemDiff.ChangedProperties {
 		if !strings.HasPrefix(k, "Configuration.NetworkInterfaces.") {
@@ -125,34 +188,41 @@ func (t ec2Transformer) Update(event awsConfigEvent) ([]Output, error) {
 			return []Output{}, err
 		}
 		ni := diff.UpdatedValue
-		output := baseOutput
-		change := Change{}
-		change.ChangeType = added
-		// changes := &addedChange
+		changes := &addedChange
 		if diff.ChangeType == delete {
 			ni = diff.PreviousValue
-			change.ChangeType = deleted
-			// changes = &deletedChange
-		} else {
-			output.ChangeTime = ni.Attachment.AttachTime
+			changes = &deletedChange
 		}
 		private, public, dns := extractNetworkInterfaceInfo(ni)
-		change.PrivateIPAddresses = append(change.PrivateIPAddresses, private...)
-		change.PublicIPAddresses = append(change.PublicIPAddresses, public...)
-		change.Hostnames = append(change.Hostnames, dns...)
-		output.Changes = append(output.Changes, change)
-		outputs = append(outputs, output)
+		changes.PrivateIPAddresses = append(changes.PrivateIPAddresses, private...)
+		changes.PublicIPAddresses = append(changes.PublicIPAddresses, public...)
+		changes.Hostnames = append(changes.Hostnames, dns...)
+		// collect added IPs & hostnames and their associated attachTimes, for later EC2 event splitting
+		if diff.ChangeType != delete {
+			for _, privateIP := range private {
+				addPrivateIPMap[privateIP] = ni.Attachment.AttachTime
+			}
+			for _, publicIP := range public {
+				addPublicIPMap[publicIP] = ni.Attachment.AttachTime
+			}
+			for _, hostname := range dns {
+				addHostnameMap[hostname] = ni.Attachment.AttachTime
+			}
+		}
 	}
 
 	// We need to compute the symmetric difference of the added changes and the removed changes
 	// i.e. remove entries that show up as both added and removed
-	// symmetricDifference(&addedChange, &deletedChange)
-	// if len(addedChange.PrivateIPAddresses) > 0 || len(addedChange.PublicIPAddresses) > 0 || len(addedChange.Hostnames) > 0 {
-	// 	output.Changes = append(output.Changes, addedChange)
-	// }
-	// if len(deletedChange.PrivateIPAddresses) > 0 || len(deletedChange.PublicIPAddresses) > 0 || len(deletedChange.Hostnames) > 0 {
-	// 	output.Changes = append(output.Changes, deletedChange)
-	// }
+	symmetricDifference(&addedChange, &deletedChange)
+	if len(addedChange.PrivateIPAddresses) > 0 || len(addedChange.PublicIPAddresses) > 0 || len(addedChange.Hostnames) > 0 {
+		addedOutputs := separateAddedChanges(baseOutput, addedChange, addPrivateIPMap, addPublicIPMap, addHostnameMap)
+		outputs = append(outputs, addedOutputs...)
+	}
+	if len(deletedChange.PrivateIPAddresses) > 0 || len(deletedChange.PublicIPAddresses) > 0 || len(deletedChange.Hostnames) > 0 {
+		deletedOutput := baseOutput
+		deletedOutput.Changes = append(deletedOutput.Changes, deletedChange)
+		outputs = append(outputs, deletedOutput)
+	}
 	return outputs, nil
 }
 
