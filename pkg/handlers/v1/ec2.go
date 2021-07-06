@@ -122,7 +122,7 @@ func initializeAttachMapEntry(attachMap map[string]map[string][]string, attachTi
 
 func separateAddedChanges(baseOutput Output, addedChange Change, privateIPMap map[string]string, publicIPMap map[string]string, hostnameMap map[string]string) []Output {
 	outputs := make([]Output, 0)
-	// map of attachTimes --> {
+	// map of attachTimes --> map{
 	// "privateIPs": []string
 	// "publicIPs": []string
 	// "hostnames": []string
