@@ -327,7 +327,6 @@ func TestTransformEC2(t *testing.T) {
 				assert.Equal(t, tt.ExpectedOutput[i].Tags, output[i].Tags)
 				assert.Equal(t, tt.ExpectedOutput[i].ChangeTime, output[i].ChangeTime)
 				assert.Equal(t, tt.ExpectedOutput[i].Changes, output[i].Changes)
-				// assert.True(t, reflect.DeepEqual(tt.ExpectedOutput[i].Changes, output[i].Changes), "The expected changes were different than the result")
 			}
 		})
 	}
