@@ -202,8 +202,8 @@ func sliceDiff(a, b []string) []string {
 // extract network interface information from an ec2 configuration
 func extractEC2NetworkInfo(config *ec2Configuration) Change {
 	change := Change{}
-	for _, ni := range config.NetworkInterfaces {
-		private, public, dns := extractNetworkInterfaceInfo(&ni)
+	for i := range config.NetworkInterfaces {
+		private, public, dns := extractNetworkInterfaceInfo(&config.NetworkInterfaces[i])
 		change.PrivateIPAddresses = append(change.PrivateIPAddresses, private...)
 		change.PublicIPAddresses = append(change.PublicIPAddresses, public...)
 		change.Hostnames = append(change.Hostnames, dns...)
