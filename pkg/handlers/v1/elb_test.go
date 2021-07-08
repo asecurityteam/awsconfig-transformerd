@@ -215,7 +215,7 @@ func TestTransformELB(t *testing.T) {
 				assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
 				assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
 				assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
-				assert.Equal(t, tt.ExpectedOutput.Changes, tt.ExpectedOutput.Changes)
+				assert.Equal(t, tt.ExpectedOutput.Changes, tt.ExpectedOutput.Changes) // relevant ticket: https://asecurityteam.atlassian.net/browse/SID-1083
 			}
 		})
 	}

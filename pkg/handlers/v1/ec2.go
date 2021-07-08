@@ -122,11 +122,10 @@ func initializeAttachMapEntry(attachMap map[string]map[string][]string, attachTi
 
 func separateAddedChanges(baseOutput Output, addedChange Change, privateIPMap map[string]string, publicIPMap map[string]string, hostnameMap map[string]string) []Output {
 	outputs := make([]Output, 0)
-	// map of attachTimes --> map{
-	// "privateIPs": []string
-	// "publicIPs": []string
-	// "hostnames": []string
-	// }
+	// attachMap is a map of attachTimes (string) to a map with the following pairs:
+	// 	"privateIPs": array of private IPs
+	// 	"publicIPs": array of public IPs
+	// 	"hostnames": array of hostnames
 	attachMap := make(map[string]map[string][]string)
 	// separate IPs & hostnames by attachTime
 	for _, ip := range addedChange.PrivateIPAddresses {
