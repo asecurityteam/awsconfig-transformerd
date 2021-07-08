@@ -32,7 +32,7 @@ func TestAWSConfigEventMarshalling(t *testing.T) {
 	res := awsConfigEvent{}
 	_ = json.Unmarshal(data, &res)
 
-	assert.NotNil(t, res.ConfigurationItemDiff.ChangedProperties, "marshalling should have resulted in non-nil value")
+	assert.NotNil(t, res.ConfigurationItemDiff.ChangedProperties, "marshaling should have resulted in non-nil value")
 	marshaled, _ := json.MarshalIndent(res, "", "    ")
 
 	assert.JSONEq(t, string(data), string(marshaled))
@@ -40,9 +40,9 @@ func TestAWSConfigEventMarshalling(t *testing.T) {
 
 func TestTransformEmptiness(t *testing.T) {
 	event := awsConfigEvent{}
-	marshalled, _ := json.Marshal(event)
+	marshaled, _ := json.Marshal(event)
 	transformer := &Transformer{LogFn: logFn}
-	output, err := transformer.Handle(context.Background(), Input{Message: string(marshalled)})
+	output, err := transformer.Handle(context.Background(), Input{Message: string(marshaled)})
 	assert.Nil(t, err, "expected non-nil")
 	assert.Equal(t, 0, len(output.Changes))
 }

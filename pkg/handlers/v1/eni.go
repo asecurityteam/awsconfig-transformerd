@@ -51,7 +51,7 @@ func (t eniTransformer) Create(event awsConfigEvent) (Output, error) {
 
 // Returns true if we should filter this event due to not being requester managed
 func filter(config eniConfiguration) bool {
-	return config.RequesterManaged == false || config.RequesterID != elbRequester
+	return !config.RequesterManaged || config.RequesterID != elbRequester
 }
 
 func (t eniTransformer) Update(event awsConfigEvent) (Output, error) {
