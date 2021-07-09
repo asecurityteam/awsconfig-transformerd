@@ -524,7 +524,7 @@ func TestELBTransformerDelete(t *testing.T) {
 			outputs, err := et.Delete(tt.Event)
 			if tt.ExpectError {
 				require.NotNil(t, err)
-				assert.Equal(t, reflect.TypeOf(tt.ExpectedError), reflect.TypeOf(err))
+				assert.Equal(t, tt.ExpectedError, err)
 				assert.Equal(t, 0, len(outputs))
 			} else {
 				require.Nil(t, err)
