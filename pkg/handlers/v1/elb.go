@@ -41,7 +41,7 @@ type elbTransformer struct{}
 // what kind of timestamp the original config had.
 func unmarshalConfig(rawConfig json.RawMessage) (elbConfiguration, error) {
 	var config elbConfiguration
-	if err := json.Unmarshal(rawConfig, &config); err != nil {
+	if err := json.Unmarshal(rawConfig, &config); err != nil { // TODO: check for v1 vs v2 here instead
 		// Timestamp came in form of milliseconds, we must convert to timestamp string
 		var configMillis elbConfigurationMillis
 		if err = json.Unmarshal(rawConfig, &configMillis); err != nil {
