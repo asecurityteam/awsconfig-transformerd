@@ -10,7 +10,7 @@ type elbConfiguration struct {
 	CreatedTime string `json:"createdTime"`
 }
 
-type elbConfigurationMillis struct {
+type elbV1Configuration struct {
 	DNSName     string `json:"dnsname"`
 	CreatedTime int64  `json:"createdTime"`
 }
@@ -35,20 +35,23 @@ func extractELBNetworkInfo(config *elbConfiguration) Change {
 
 type elbTransformer struct{}
 
-// Some ELBs have createdTime in the form of milliseconds, which is int64 in Go,
-// so we need to convert those to a RFC3339 timestamp string. This unmarshal function
-// returns an elbConfiguration that uses RFC3339 timestamp string with milliseconds, no matter
-// what kind of timestamp the original config had.
-func unmarshalConfig(rawConfig json.RawMessage) (elbConfiguration, error) {
+func unmarshalConfig(event awsConfigEvent) (elbConfiguration, error) {
 	var config elbConfiguration
-	if err := json.Unmarshal(rawConfig, &config); err != nil { // TODO: check for v1 vs v2 here instead
-		// Timestamp came in form of milliseconds, we must convert to timestamp string
-		var configMillis elbConfigurationMillis
-		if err = json.Unmarshal(rawConfig, &configMillis); err != nil {
+	if event.ConfigurationItem.ResourceType == "AWS::ElasticLoadBalancing::LoadBalancer" {
+		// Classic ELB (V1) has createdTime in the form of milliseconds, which is int64 in Go,
+		// so we need to convert to a RFC3339 timestamp string
+		var configv1 elbV1Configuration
+		if err := json.Unmarshal(event.ConfigurationItem.Configuration, &configv1); err != nil {
 			return elbConfiguration{}, err
 		}
-		config.DNSName = configMillis.DNSName
-		config.CreatedTime = time.Unix(0, configMillis.CreatedTime*int64(time.Millisecond)).Format("2006-01-02T15:04:05.000Z")
+		config.DNSName = configv1.DNSName
+		config.CreatedTime = time.Unix(0, configv1.CreatedTime*int64(time.Millisecond)).Format("2006-01-02T15:04:05.000Z")
+	} else {
+		// ELB V2 already has createdTime as a RFC3339 timestamp string with milliseconds,
+		// so we can read it into the struct directly
+		if err := json.Unmarshal(event.ConfigurationItem.Configuration, &config); err != nil {
+			return elbConfiguration{}, err
+		}
 	}
 	return config, nil
 }
@@ -60,7 +63,7 @@ func (t elbTransformer) Create(event awsConfigEvent) ([]Output, error) {
 	}
 	// if a resource is created for the first time, there is no diff.
 	// just read the configuration
-	config, err := unmarshalConfig(event.ConfigurationItem.Configuration)
+	config, err := unmarshalConfig(event)
 	if err != nil {
 		return []Output{}, err
 	}
@@ -78,7 +81,7 @@ func (t elbTransformer) Update(event awsConfigEvent) ([]Output, error) {
 	if err != nil {
 		return []Output{}, err
 	}
-	config, err := unmarshalConfig(event.ConfigurationItem.Configuration)
+	config, err := unmarshalConfig(event)
 	if err != nil {
 		return []Output{}, err
 	}
@@ -103,7 +106,7 @@ func (t elbTransformer) Delete(event awsConfigEvent) ([]Output, error) {
 		return []Output{}, err
 	}
 
-	config, err := unmarshalConfig(configDiff.PreviousValue)
+	config, err := unmarshalConfig(event)
 	if err != nil {
 		return []Output{}, err
 	}
