@@ -506,7 +506,7 @@ func TestELBTransformerDelete(t *testing.T) {
 				ConfigurationItemDiff: configurationItemDiff{
 					ChangeType: delete,
 					ChangedProperties: map[string]json.RawMessage{
-						"Configuration":                   json.RawMessage("{\"previousValue\":{\"loadBalancerName\":\"config-test-elb\",\"canonicalHostedZoneNameID\":\"Z1H1FL5HABSF5\",\"listenerDescriptions\":[{\"listener\":{\"protocol\":\"HTTP\",\"loadBalancerPort\":80,\"instanceProtocol\":\"HTTP\",\"instancePort\":80},\"policyNames\":[]}],\"policies\":{\"appCookieStickinessPolicies\":[],\"otherPolicies\":[],\"lbcookieStickinessPolicies\":[]},\"backendServerDescriptions\":[],\"availabilityZones\":[\"us-west-2a\",\"us-west-2b\",\"us-west-2c\",\"us-west-2d\"],\"subnets\":[\"subnet-24b88c41\",\"subnet-7b600d22\",\"subnet-94bbf1e3\",\"subnet-ee4140c6\"],\"sourceSecurityGroup\":{\"ownerAlias\":\"917546781095\",\"groupName\":\"default\"},\"securityGroups\":[\"sg-51164235\"],\"createdTime\":1553713467830,\"scheme\":\"internal\",\"dnsname\":\"internal-config-test-elb-67410663.us-west-2.elb.amazonaws.com\",\"vpcid\":\"vpc-8af6d7ef\"},\"updatedValue\":null,\"changeType\":\"DELETE\"}"),
+						"Configuration":                   json.RawMessage("{\"previousValue\":{\"loadBalancerName\":\"config-test-elb\",\"canonicalHostedZoneNameID\":\"Z1H1FL5HABSF5\",\"listenerDescriptions\":[{\"listener\":{\"protocol\":\"HTTP\",\"loadBalancerPort\":80,\"instanceProtocol\":\"HTTP\",\"instancePort\":80},\"policyNames\":[]}],\"policies\":{\"appCookieStickinessPolicies\":[],\"otherPolicies\":[],\"lbcookieStickinessPolicies\":[]},\"backendServerDescriptions\":[],\"availabilityZones\":[\"us-west-2a\",\"us-west-2b\",\"us-west-2c\",\"us-west-2d\"],\"subnets\":[\"subnet-24b88c41\",\"subnet-7b600d22\",\"subnet-94bbf1e3\",\"subnet-ee4140c6\"],\"sourceSecurityGroup\":{\"ownerAlias\":\"917546781095\",\"groupName\":\"default\"},\"securityGroups\":[\"sg-51164235\"],\"createdTime\":\"2019-03-27T19:04:27.830Z\",\"scheme\":\"internal\",\"dnsname\":\"internal-config-test-elb-67410663.us-west-2.elb.amazonaws.com\",\"vpcid\":\"vpc-8af6d7ef\"},\"updatedValue\":null,\"changeType\":\"DELETE\"}"),
 						"SupplementaryConfiguration.Tags": json.RawMessage("{\"previousValue\":[{\"key\": 1}],\"updatedValue\":null,\"changeType\":\"DELETE\"}"),
 					},
 				},
@@ -524,7 +524,7 @@ func TestELBTransformerDelete(t *testing.T) {
 			outputs, err := et.Delete(tt.Event)
 			if tt.ExpectError {
 				require.NotNil(t, err)
-				assert.Equal(t, tt.ExpectedError, err)
+				assert.Equal(t, reflect.TypeOf(tt.ExpectedError), reflect.TypeOf(err))
 				assert.Equal(t, 0, len(outputs))
 			} else {
 				require.Nil(t, err)
