@@ -92,13 +92,12 @@ func (t ec2Transformer) Create(event awsConfigEvent) ([]Output, error) {
 	}
 
 	hasEni := false
-	for _, ni := range config.NetworkInterfaces {
-		ni := ni
+	for i := range config.NetworkInterfaces {
 		hasEni = true
 		output := baseOutput
 		change := Change{}
-		output.ChangeTime = ni.Attachment.AttachTime
-		private, public, dns := extractNetworkInterfaceInfo(&ni)
+		output.ChangeTime = config.NetworkInterfaces[i].Attachment.AttachTime
+		private, public, dns := extractNetworkInterfaceInfo(&config.NetworkInterfaces[i])
 		change.PrivateIPAddresses = append(change.PrivateIPAddresses, private...)
 		change.PublicIPAddresses = append(change.PublicIPAddresses, public...)
 		change.Hostnames = append(change.Hostnames, dns...)
