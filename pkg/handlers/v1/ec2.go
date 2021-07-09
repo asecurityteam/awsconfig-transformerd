@@ -7,12 +7,6 @@ import (
 	"time"
 )
 
-const (
-	private = "privateIps"
-	public  = "publicIps"
-	dns     = "hostnames"
-)
-
 type ec2Configuration struct {
 	InstanceID string `json:"instanceId"`
 	State      struct {
@@ -76,6 +70,12 @@ type ec2ChangedPropsARN struct {
 	ChangeType    string `json:"changeType"`
 }
 
+type eniIPList struct {
+	PrivateIPs []string
+	PublicIPs  []string
+	Hostnames  []string
+}
+
 type ec2Transformer struct{}
 
 func (t ec2Transformer) Create(event awsConfigEvent) ([]Output, error) {
@@ -112,50 +112,46 @@ func (t ec2Transformer) Create(event awsConfigEvent) ([]Output, error) {
 	return outputs, nil
 }
 
-func initializeAttachMapEntry(attachMap map[string]map[string][]string, attachTime string) {
-	attachMap[attachTime] = make(map[string][]string)
-	attachMap[attachTime][private] = make([]string, 0)
-	attachMap[attachTime][public] = make([]string, 0)
-	attachMap[attachTime][dns] = make([]string, 0)
+func initializeAttachMapEntry(attachMap map[string]*eniIPList, attachTime string) {
+	attachMap[attachTime] = &eniIPList{}
+	attachMap[attachTime].PrivateIPs = make([]string, 0)
+	attachMap[attachTime].PublicIPs = make([]string, 0)
+	attachMap[attachTime].Hostnames = make([]string, 0)
 }
 
 func separateAddedChanges(baseOutput Output, addedChange Change, privateIPMap map[string]string, publicIPMap map[string]string, hostnameMap map[string]string) []Output {
 	outputs := make([]Output, 0)
-	// attachMap is a map of attachTimes (string) to a map with the following pairs:
-	// 	"privateIPs": array of private IPs
-	// 	"publicIPs": array of public IPs
-	// 	"hostnames": array of hostnames
-	attachMap := make(map[string]map[string][]string)
+	attachMap := make(map[string]*eniIPList)
 	// separate IPs & hostnames by attachTime
 	for _, ip := range addedChange.PrivateIPAddresses {
 		attachTime := privateIPMap[ip]
 		if _, ok := attachMap[attachTime]; !ok {
 			initializeAttachMapEntry(attachMap, attachTime)
 		}
-		attachMap[attachTime][private] = append(attachMap[attachTime][private], ip)
+		attachMap[attachTime].PrivateIPs = append(attachMap[attachTime].PrivateIPs, ip)
 	}
 	for _, ip := range addedChange.PublicIPAddresses {
 		attachTime := publicIPMap[ip]
 		if _, ok := attachMap[attachTime]; !ok {
 			initializeAttachMapEntry(attachMap, attachTime)
 		}
-		attachMap[attachTime][public] = append(attachMap[attachTime][public], ip)
+		attachMap[attachTime].PublicIPs = append(attachMap[attachTime].PublicIPs, ip)
 	}
 	for _, hostname := range addedChange.Hostnames {
 		attachTime := hostnameMap[hostname]
 		if _, ok := attachMap[attachTime]; !ok {
 			initializeAttachMapEntry(attachMap, attachTime)
 		}
-		attachMap[attachTime][dns] = append(attachMap[attachTime][dns], hostname)
+		attachMap[attachTime].Hostnames = append(attachMap[attachTime].Hostnames, hostname)
 	}
 
 	// create Output structs with each attachTime
-	for attachTime, ipMap := range attachMap {
+	for attachTime, ipList := range attachMap {
 		output := baseOutput
 		change := Change{ChangeType: added}
-		change.PrivateIPAddresses = append(change.PrivateIPAddresses, ipMap[private]...)
-		change.PublicIPAddresses = append(change.PublicIPAddresses, ipMap[public]...)
-		change.Hostnames = append(change.Hostnames, ipMap[dns]...)
+		change.PrivateIPAddresses = append(change.PrivateIPAddresses, ipList.PrivateIPs...)
+		change.PublicIPAddresses = append(change.PublicIPAddresses, ipList.PublicIPs...)
+		change.Hostnames = append(change.Hostnames, ipList.Hostnames...)
 		output.Changes = append(output.Changes, change)
 		output.ChangeTime = attachTime
 		outputs = append(outputs, output)
