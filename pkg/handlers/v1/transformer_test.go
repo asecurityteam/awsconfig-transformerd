@@ -131,7 +131,7 @@ func TestTransformEC2(t *testing.T) {
 		},
 		{
 			Name:      "ec2-stopped-again",
-			InputFile: "ec2.3.json", // 172.31.30.79 no op, 34.219.72.29 gone, 2019-02-22T20:30:10.000Z gone
+			InputFile: "ec2.3.json", // 172.31.30.79 no op, 34.219.72.29 gone, ec2-34-219-72-29.us-west-2.compute.amazonaws.com gone
 			ExpectedOutput: []Output{{
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T21:17:53.073Z",
@@ -298,6 +298,11 @@ func TestTransformEC2(t *testing.T) {
 					}},
 			},
 		},
+		{
+			Name:           "ec2-no-enis",
+			InputFile:      "ec2.no-enis.json",
+			ExpectedOutput: []Output{},
+		},
 	}
 
 	for _, tt := range tc {
@@ -328,6 +333,64 @@ func TestTransformEC2(t *testing.T) {
 				assert.Equal(t, tt.ExpectedOutput[i].ChangeTime, output[i].ChangeTime)
 				assert.Equal(t, tt.ExpectedOutput[i].Changes, output[i].Changes)
 			}
+		})
+	}
+}
+
+func TestTransformEC2Errors(t *testing.T) {
+	tc := []struct {
+		Name           string
+		InputFile      string
+		ExpectedOutput []Output
+		ExpectedError  error
+	}{
+		{
+			Name:           "ec2-create-bad-config-item",
+			InputFile:      "ec2.no-account-id-create.json",
+			ExpectedOutput: []Output{},
+			ExpectedError:  ErrMissingValue{Field: "AWSAccountID"},
+		},
+		{
+			Name:           "ec2-update-bad-config-item",
+			InputFile:      "ec2.no-account-id-update.json",
+			ExpectedOutput: []Output{},
+			ExpectedError:  ErrMissingValue{Field: "AWSAccountID"},
+		},
+		{
+			Name:           "ec2-delete-bad-config-item",
+			InputFile:      "ec2.no-account-id-delete.json",
+			ExpectedOutput: []Output{},
+			ExpectedError:  ErrMissingValue{Field: "AWSAccountID"},
+		},
+		{
+			Name:           "ec2-bad-config",
+			InputFile:      "ec2.bad-config.json",
+			ExpectedOutput: []Output{},
+			ExpectedError:  &json.UnmarshalTypeError{Value: "number", Offset: 107, Type: reflect.TypeOf(""), Struct: "ec2Configuration", Field: "instanceType"},
+		},
+		{
+			Name:           "ec2-bad-eni-diff",
+			InputFile:      "ec2.bad-eni-diff.json",
+			ExpectedOutput: []Output{},
+			ExpectedError:  &json.UnmarshalTypeError{Value: "number", Offset: 795, Type: reflect.TypeOf(""), Struct: "networkInterfaceDiff", Field: "changeType"},
+		},
+	}
+
+	for _, tt := range tc {
+		tt := tt
+		t.Run(tt.Name, func(t *testing.T) {
+			data, err := ioutil.ReadFile(filepath.Join("testdata", tt.InputFile))
+			require.Nil(t, err)
+
+			var input Input
+			err = json.Unmarshal(data, &input)
+			require.Nil(t, err)
+
+			transformer := &Transformer{StatFn: runhttp.StatFromContext, LogFn: logFn}
+			output, err := transformer.Handle(context.Background(), input)
+			require.NotNil(t, err)
+			assert.Equal(t, 0, len(output))
+			assert.Equal(t, tt.ExpectedError, err)
 		})
 	}
 }
