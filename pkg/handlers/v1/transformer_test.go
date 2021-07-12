@@ -299,6 +299,30 @@ func TestTransformEC2(t *testing.T) {
 			},
 		},
 		{
+			Name:      "ec2-update-eni",
+			InputFile: "ec2.update-ENI.json",
+			ExpectedOutput: []Output{
+				{
+					AccountID:    "123456789012",
+					ChangeTime:   "2019-02-22T20:30:10.000Z",
+					Region:       "us-west-2",
+					ResourceType: "AWS::EC2::Instance",
+					ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
+					Tags: map[string]string{
+						"business_unit": "CISO-Security",
+						"service_name":  "foo-bar",
+					},
+					Changes: []Change{
+						{
+							PrivateIPAddresses: []string{"172.31.30.79"},
+							PublicIPAddresses:  []string{"34.219.72.29"},
+							Hostnames:          []string{"ec2-34-219-72-29.us-west-2.compute.amazonaws.com"},
+							ChangeType:         "ADDED",
+						},
+					}},
+			},
+		},
+		{
 			Name:           "ec2-no-enis",
 			InputFile:      "ec2.no-enis.json",
 			ExpectedOutput: []Output{},
