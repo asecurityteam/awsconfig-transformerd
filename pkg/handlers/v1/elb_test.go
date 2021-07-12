@@ -236,6 +236,26 @@ func TestELBTransformerCreate(t *testing.T) {
 					AWSAccountID:                 "123456789012",
 					AWSRegion:                    "us-west-2",
 					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
+					ResourceType:                 "AWS::ElasticLoadBalancing::LoadBalancer",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
+					Tags:                         map[string]string{"foo": "bar"},
+					Configuration:                json.RawMessage(`{"dnsname": 1}`),
+				},
+				ConfigurationItemDiff: configurationItemDiff{
+					ChangeType: create,
+				},
+			},
+			ExpectedOutput: Output{},
+			ExpectError:    true,
+			ExpectedError:  &json.UnmarshalTypeError{Value: "number", Offset: 13, Type: reflect.TypeOf(""), Struct: "elbConfiguration", Field: "dnsname"},
+		},
+		{
+			Name: "elbv2-unmarshall-error",
+			Event: awsConfigEvent{
+				ConfigurationItem: configurationItem{
+					AWSAccountID:                 "123456789012",
+					AWSRegion:                    "us-west-2",
+					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
 					ResourceType:                 "AWS::ElasticLoadBalancingV2::LoadBalancer",
 					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 					Tags:                         map[string]string{"foo": "bar"},
@@ -326,6 +346,46 @@ func TestELBTransformerUpdate(t *testing.T) {
 			ExpectedOutput: Output{},
 			ExpectError:    true,
 			ExpectedError:  ErrMissingValue{Field: "AWSAccountID"},
+		},
+		{
+			Name: "elb-update-unmarshal-error",
+			Event: awsConfigEvent{
+				ConfigurationItem: configurationItem{
+					AWSAccountID:                 "123456789012",
+					AWSRegion:                    "us-west-2",
+					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
+					ResourceType:                 "AWS::ElasticLoadBalancing::LoadBalancer",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
+					Tags:                         map[string]string{"foo": "bar"},
+					Configuration:                json.RawMessage(`{"dnsname": 1}`),
+				},
+				ConfigurationItemDiff: configurationItemDiff{
+					ChangeType: update,
+				},
+			},
+			ExpectedOutput: Output{},
+			ExpectError:    true,
+			ExpectedError:  &json.UnmarshalTypeError{Value: "number", Offset: 13, Type: reflect.TypeOf(""), Struct: "elbConfiguration", Field: "dnsname"},
+		},
+		{
+			Name: "elb-delete-unmarshal-error",
+			Event: awsConfigEvent{
+				ConfigurationItem: configurationItem{
+					AWSAccountID:                 "123456789012",
+					AWSRegion:                    "us-west-2",
+					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
+					ResourceType:                 "AWS::ElasticLoadBalancing::LoadBalancer",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
+					Tags:                         map[string]string{"foo": "bar"},
+					Configuration:                json.RawMessage(`{"dnsname": 1}`),
+				},
+				ConfigurationItemDiff: configurationItemDiff{
+					ChangeType: delete,
+				},
+			},
+			ExpectedOutput: Output{},
+			ExpectError:    true,
+			ExpectedError:  &json.UnmarshalTypeError{Value: "number", Offset: 13, Type: reflect.TypeOf(""), Struct: "elbConfiguration", Field: "dnsname"},
 		},
 	}
 
