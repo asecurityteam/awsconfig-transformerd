@@ -138,9 +138,10 @@ func separateAddedChanges(baseOutput Output, addedChange Change, privateIPMap ma
 		attachMap[attachTime].PublicIPs = append(attachMap[attachTime].PublicIPs, ip)
 	}
 	for _, hostname := range addedChange.Hostnames {
-		// the attachTime will always already be in the map, because adding the private IP(s)
-		// would have created an entry
 		attachTime := hostnameMap[hostname]
+		if _, ok := attachMap[attachTime]; !ok {
+			initializeAttachMapEntry(attachMap, attachTime)
+		}
 		attachMap[attachTime].Hostnames = append(attachMap[attachTime].Hostnames, hostname)
 	}
 

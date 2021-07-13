@@ -121,7 +121,6 @@ func TestTransformEC2(t *testing.T) {
 				},
 				Changes: []Change{
 					{
-						// PrivateIPAddresses: []string{},
 						PublicIPAddresses: []string{"34.219.72.29"},
 						Hostnames:         []string{"ec2-34-219-72-29.us-west-2.compute.amazonaws.com"},
 						ChangeType:        "ADDED",
