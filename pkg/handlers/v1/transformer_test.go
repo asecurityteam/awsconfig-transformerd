@@ -43,8 +43,8 @@ func TestTransformEmptiness(t *testing.T) {
 	marshaled, _ := json.Marshal(event)
 	transformer := &Transformer{LogFn: logFn}
 	output, err := transformer.Handle(context.Background(), Input{Message: string(marshaled)})
-	assert.Nil(t, err, "expected non-nil")
-	assert.Equal(t, 0, len(output.Changes))
+	assert.NotNil(t, err, "expected non-nil")
+	assert.Equal(t, 0, len(output)) // No Outputs returned
 }
 
 func TestTransformInvalidJSON(t *testing.T) {
@@ -57,15 +57,15 @@ func TestTransformEC2(t *testing.T) {
 	tc := []struct {
 		Name           string
 		InputFile      string
-		ExpectedOutput Output
+		ExpectedOutput []Output
 		ExpectError    bool
 	}{
 		{
 			Name:      "ec2-created",
 			InputFile: "ec2.0.json",
-			ExpectedOutput: Output{
+			ExpectedOutput: []Output{{
 				AccountID:    "123456789012",
-				ChangeTime:   "2019-02-22T20:43:10.208Z",
+				ChangeTime:   "2019-02-22T20:30:10.000Z",
 				Region:       "us-west-2",
 				ResourceType: "AWS::EC2::Instance",
 				ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
@@ -80,13 +80,13 @@ func TestTransformEC2(t *testing.T) {
 						Hostnames:          []string{"ec2-34-222-120-66.us-west-2.compute.amazonaws.com"},
 						ChangeType:         "ADDED",
 					},
-				},
+				}},
 			},
 		},
 		{
 			Name:      "ec2-stopped",
-			InputFile: "ec2.1.json",
-			ExpectedOutput: Output{
+			InputFile: "ec2.1.json", // Delete event, expect 1 Output returned
+			ExpectedOutput: []Output{{
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T20:48:32.538Z",
 				Region:       "us-west-2",
@@ -103,15 +103,15 @@ func TestTransformEC2(t *testing.T) {
 						Hostnames:          []string{"ec2-34-222-120-66.us-west-2.compute.amazonaws.com"},
 						ChangeType:         "DELETED",
 					},
-				},
+				}},
 			},
 		},
 		{
 			Name:      "ec2-restarted",
-			InputFile: "ec2.2.json",
-			ExpectedOutput: Output{
+			InputFile: "ec2.2.json", // 172.31.30.79 no op, 34.219.72.29 add, ec2-34-219-72-29.us-west-2.compute.amazonaws.com add
+			ExpectedOutput: []Output{{
 				AccountID:    "123456789012",
-				ChangeTime:   "2019-02-22T21:02:18.758Z",
+				ChangeTime:   "2019-02-22T20:30:10.000Z",
 				Region:       "us-west-2",
 				ResourceType: "AWS::EC2::Instance",
 				ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
@@ -121,18 +121,17 @@ func TestTransformEC2(t *testing.T) {
 				},
 				Changes: []Change{
 					{
-						PrivateIPAddresses: []string{},
-						PublicIPAddresses:  []string{"34.219.72.29"},
-						Hostnames:          []string{"ec2-34-219-72-29.us-west-2.compute.amazonaws.com"},
-						ChangeType:         "ADDED",
+						PublicIPAddresses: []string{"34.219.72.29"},
+						Hostnames:         []string{"ec2-34-219-72-29.us-west-2.compute.amazonaws.com"},
+						ChangeType:        "ADDED",
 					},
-				},
+				}},
 			},
 		},
 		{
 			Name:      "ec2-stopped-again",
-			InputFile: "ec2.3.json",
-			ExpectedOutput: Output{
+			InputFile: "ec2.3.json", // 172.31.30.79 no op, 34.219.72.29 gone, ec2-34-219-72-29.us-west-2.compute.amazonaws.com gone
+			ExpectedOutput: []Output{{
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T21:17:53.073Z",
 				Region:       "us-west-2",
@@ -149,13 +148,13 @@ func TestTransformEC2(t *testing.T) {
 						Hostnames:          []string{"ec2-34-219-72-29.us-west-2.compute.amazonaws.com"},
 						ChangeType:         "DELETED",
 					},
-				},
+				}},
 			},
 		},
 		{
 			Name:      "ec2-terminated",
-			InputFile: "ec2.4.json",
-			ExpectedOutput: Output{
+			InputFile: "ec2.4.json", // Delete, expect 1 Output returned
+			ExpectedOutput: []Output{{
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T21:31:57.042Z",
 				Region:       "us-west-2",
@@ -170,15 +169,15 @@ func TestTransformEC2(t *testing.T) {
 						PrivateIPAddresses: []string{"172.31.30.79"},
 						ChangeType:         "DELETED",
 					},
-				},
+				}},
 			},
 		},
 		{
 			Name:      "ec2-created-notags",
-			InputFile: "ec2.5.json",
-			ExpectedOutput: Output{
+			InputFile: "ec2.5.json", // Has 1 ENI, expect 1 Output returned
+			ExpectedOutput: []Output{{
 				AccountID:    "123456789012",
-				ChangeTime:   "2019-02-22T20:43:10.208Z",
+				ChangeTime:   "2019-02-22T20:30:10.000Z",
 				Region:       "us-west-2",
 				ResourceType: "AWS::EC2::Instance",
 				ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
@@ -189,13 +188,13 @@ func TestTransformEC2(t *testing.T) {
 						Hostnames:          []string{"ec2-34-222-120-66.us-west-2.compute.amazonaws.com"},
 						ChangeType:         "ADDED",
 					},
-				},
+				}},
 			},
 		},
 		{
 			Name:      "ec2-terminated-notags",
-			InputFile: "ec2.6.json",
-			ExpectedOutput: Output{
+			InputFile: "ec2.6.json", // Delete, expect 1 Output returned
+			ExpectedOutput: []Output{{
 				AccountID:    "123456789012",
 				ChangeTime:   "2019-02-22T21:31:57.042Z",
 				Region:       "us-west-2",
@@ -206,7 +205,7 @@ func TestTransformEC2(t *testing.T) {
 						PrivateIPAddresses: []string{"172.31.30.79"},
 						ChangeType:         "DELETED",
 					},
-				},
+				}},
 			},
 		},
 		{
@@ -216,8 +215,8 @@ func TestTransformEC2(t *testing.T) {
 		},
 		{
 			Name:      "ec2-deleted-configuration",
-			InputFile: "ec2.deleted.json",
-			ExpectedOutput: Output{
+			InputFile: "ec2.deleted.json", // Delete event, expect 1 Output returned
+			ExpectedOutput: []Output{{
 				AccountID:    "752631980301",
 				ChangeTime:   "2019-12-11T01:00:29.000Z",
 				Region:       "us-west-2",
@@ -249,13 +248,83 @@ func TestTransformEC2(t *testing.T) {
 						Hostnames:          []string{"ec2-52-27-166-73.us-west-2.compute.amazonaws.com"},
 						ChangeType:         "DELETED",
 					},
-				},
+				}},
 			},
 		},
 		{
 			Name:        "ec2-deleted-malformed-config",
 			InputFile:   "ec2.deleted-malformed.json",
 			ExpectError: true,
+		},
+		{
+			Name:      "ec2-create-2enis",
+			InputFile: "ec2.create-2ENIs.json",
+			ExpectedOutput: []Output{{
+				AccountID:    "123456789012",
+				ChangeTime:   "2019-01-01T20:30:10.000Z",
+				Region:       "us-west-2",
+				ResourceType: "AWS::EC2::Instance",
+				ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
+				Tags: map[string]string{
+					"business_unit": "CISO-Security",
+					"service_name":  "foo-bar",
+				},
+				Changes: []Change{
+					{
+						PrivateIPAddresses: []string{"172.12.34.56"},
+						PublicIPAddresses:  []string{"34.123.456.78"},
+						Hostnames:          []string{"ec2-34-123-456-78.us-west-2.compute.amazonaws.com"},
+						ChangeType:         "ADDED",
+					},
+				}},
+				{
+					AccountID:    "123456789012",
+					ChangeTime:   "2019-04-01T20:30:10.000Z",
+					Region:       "us-west-2",
+					ResourceType: "AWS::EC2::Instance",
+					ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
+					Tags: map[string]string{
+						"business_unit": "CISO-Security",
+						"service_name":  "foo-bar",
+					},
+					Changes: []Change{
+						{
+							PrivateIPAddresses: []string{"172.65.43.21"},
+							PublicIPAddresses:  []string{"34.876.543.21"},
+							Hostnames:          []string{"ec2-34-876-543-21.us-west-2.compute.amazonaws.com"},
+							ChangeType:         "ADDED",
+						},
+					}},
+			},
+		},
+		{
+			Name:      "ec2-update-eni",
+			InputFile: "ec2.update-ENI.json",
+			ExpectedOutput: []Output{
+				{
+					AccountID:    "123456789012",
+					ChangeTime:   "2019-02-22T20:30:10.000Z",
+					Region:       "us-west-2",
+					ResourceType: "AWS::EC2::Instance",
+					ARN:          "arn:aws:ec2:us-west-2:123456789012:instance/i-0a763ac3ee37d8d2b",
+					Tags: map[string]string{
+						"business_unit": "CISO-Security",
+						"service_name":  "foo-bar",
+					},
+					Changes: []Change{
+						{
+							PrivateIPAddresses: []string{"172.31.30.79"},
+							PublicIPAddresses:  []string{"34.219.72.29"},
+							Hostnames:          []string{"ec2-34-219-72-29.us-west-2.compute.amazonaws.com"},
+							ChangeType:         "ADDED",
+						},
+					}},
+			},
+		},
+		{
+			Name:           "ec2-no-enis",
+			InputFile:      "ec2.no-enis.json",
+			ExpectedOutput: []Output{},
 		},
 	}
 
@@ -273,17 +342,78 @@ func TestTransformEC2(t *testing.T) {
 			output, err := transformer.Handle(context.Background(), input)
 			if tt.ExpectError {
 				require.NotNil(t, err)
+				assert.Equal(t, 0, len(output))
 			} else {
 				require.Nil(t, err)
 			}
 
-			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
-			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
-			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
-			assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
-			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
-			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
-			assert.True(t, reflect.DeepEqual(tt.ExpectedOutput.Changes, output.Changes), "The expected changes were different than the result")
+			for i := range tt.ExpectedOutput {
+				assert.Equal(t, tt.ExpectedOutput[i].AccountID, output[i].AccountID)
+				assert.Equal(t, tt.ExpectedOutput[i].Region, output[i].Region)
+				assert.Equal(t, tt.ExpectedOutput[i].ResourceType, output[i].ResourceType)
+				assert.Equal(t, tt.ExpectedOutput[i].ARN, output[i].ARN)
+				assert.Equal(t, tt.ExpectedOutput[i].Tags, output[i].Tags)
+				assert.Equal(t, tt.ExpectedOutput[i].ChangeTime, output[i].ChangeTime)
+				assert.Equal(t, tt.ExpectedOutput[i].Changes, output[i].Changes)
+			}
+		})
+	}
+}
+
+func TestTransformEC2Errors(t *testing.T) {
+	tc := []struct {
+		Name           string
+		InputFile      string
+		ExpectedOutput []Output
+		ExpectedError  error
+	}{
+		{
+			Name:           "ec2-create-bad-config-item",
+			InputFile:      "ec2.no-account-id-create.json",
+			ExpectedOutput: []Output{},
+			ExpectedError:  ErrMissingValue{Field: "AWSAccountID"},
+		},
+		{
+			Name:           "ec2-update-bad-config-item",
+			InputFile:      "ec2.no-account-id-update.json",
+			ExpectedOutput: []Output{},
+			ExpectedError:  ErrMissingValue{Field: "AWSAccountID"},
+		},
+		{
+			Name:           "ec2-delete-bad-config-item",
+			InputFile:      "ec2.no-account-id-delete.json",
+			ExpectedOutput: []Output{},
+			ExpectedError:  ErrMissingValue{Field: "AWSAccountID"},
+		},
+		{
+			Name:           "ec2-bad-config",
+			InputFile:      "ec2.bad-config.json",
+			ExpectedOutput: []Output{},
+			ExpectedError:  &json.UnmarshalTypeError{Value: "number", Offset: 107, Type: reflect.TypeOf(""), Struct: "ec2Configuration", Field: "instanceType"},
+		},
+		{
+			Name:           "ec2-bad-eni-diff",
+			InputFile:      "ec2.bad-eni-diff.json",
+			ExpectedOutput: []Output{},
+			ExpectedError:  &json.UnmarshalTypeError{Value: "number", Offset: 795, Type: reflect.TypeOf(""), Struct: "networkInterfaceDiff", Field: "changeType"},
+		},
+	}
+
+	for _, tt := range tc {
+		tt := tt
+		t.Run(tt.Name, func(t *testing.T) {
+			data, err := ioutil.ReadFile(filepath.Join("testdata", tt.InputFile))
+			require.Nil(t, err)
+
+			var input Input
+			err = json.Unmarshal(data, &input)
+			require.Nil(t, err)
+
+			transformer := &Transformer{StatFn: runhttp.StatFromContext, LogFn: logFn}
+			output, err := transformer.Handle(context.Background(), input)
+			require.NotNil(t, err)
+			assert.Equal(t, 0, len(output))
+			assert.Equal(t, tt.ExpectedError, err)
 		})
 	}
 }

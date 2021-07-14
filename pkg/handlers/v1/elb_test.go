@@ -41,7 +41,7 @@ func TestTransformELB(t *testing.T) {
 			InputFile: "elb.create.json",
 			ExpectedOutput: Output{
 				AccountID:    "123456789012",
-				ChangeTime:   "2019-03-27T19:06:49.363Z",
+				ChangeTime:   "2019-03-27T19:04:27.830Z",
 				Region:       "us-west-2",
 				ResourceType: "AWS::ElasticLoadBalancing::LoadBalancer",
 				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
@@ -61,7 +61,7 @@ func TestTransformELB(t *testing.T) {
 			InputFile: "elb.update.json",
 			ExpectedOutput: Output{
 				AccountID:    "123456789012",
-				ChangeTime:   "2019-03-27T19:12:28.624Z",
+				ChangeTime:   "2019-03-27T19:04:27.830Z",
 				Region:       "us-west-2",
 				ResourceType: "AWS::ElasticLoadBalancing::LoadBalancer",
 				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
@@ -103,7 +103,7 @@ func TestTransformELB(t *testing.T) {
 			InputFile: "elbv2.create.json",
 			ExpectedOutput: Output{
 				AccountID:    "123456789012",
-				ChangeTime:   "2019-03-27T19:08:40.855Z",
+				ChangeTime:   "2019-03-27T19:05:52.900Z",
 				Region:       "us-west-2",
 				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 				ResourceType: "AWS::ElasticLoadBalancingV2::LoadBalancer",
@@ -123,7 +123,7 @@ func TestTransformELB(t *testing.T) {
 			InputFile: "elbv2.update.json",
 			ExpectedOutput: Output{
 				AccountID:    "123456789012",
-				ChangeTime:   "2019-03-27T19:12:03.211Z",
+				ChangeTime:   "2019-03-27T19:05:52.900Z",
 				Region:       "us-west-2",
 				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 				ResourceType: "AWS::ElasticLoadBalancingV2::LoadBalancer",
@@ -165,7 +165,7 @@ func TestTransformELB(t *testing.T) {
 			InputFile: "elbv2.create-notags.json",
 			ExpectedOutput: Output{
 				AccountID:    "123456789012",
-				ChangeTime:   "2019-03-27T19:08:40.855Z",
+				ChangeTime:   "2019-03-27T19:05:52.900Z",
 				Region:       "us-west-2",
 				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
 				ResourceType: "AWS::ElasticLoadBalancingV2::LoadBalancer",
@@ -202,20 +202,21 @@ func TestTransformELB(t *testing.T) {
 			require.Nil(t, err)
 
 			transformer := &Transformer{LogFn: logFn}
-			output, err := transformer.Handle(context.Background(), input)
+			outputs, err := transformer.Handle(context.Background(), input)
 			if tt.ExpectError {
 				assert.Error(t, err)
+				assert.Equal(t, 0, len(outputs))
 			} else {
 				assert.NoError(t, err)
+				output := outputs[0] // Load balancers will only have one Output struct since they only have one CreatedTime
+				assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
+				assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
+				assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
+				assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
+				assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
+				assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
+				assert.Equal(t, tt.ExpectedOutput.Changes, tt.ExpectedOutput.Changes) // relevant ticket: https://asecurityteam.atlassian.net/browse/SID-1083
 			}
-
-			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
-			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
-			assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
-			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
-			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
-			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
-			assert.Equal(t, tt.ExpectedOutput.Changes, tt.ExpectedOutput.Changes)
 		})
 	}
 }
@@ -230,6 +231,26 @@ func TestELBTransformerCreate(t *testing.T) {
 	}{
 		{
 			Name: "elb-unmarshall-error",
+			Event: awsConfigEvent{
+				ConfigurationItem: configurationItem{
+					AWSAccountID:                 "123456789012",
+					AWSRegion:                    "us-west-2",
+					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
+					ResourceType:                 "AWS::ElasticLoadBalancing::LoadBalancer",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
+					Tags:                         map[string]string{"foo": "bar"},
+					Configuration:                json.RawMessage(`{"dnsname": 1}`),
+				},
+				ConfigurationItemDiff: configurationItemDiff{
+					ChangeType: create,
+				},
+			},
+			ExpectedOutput: Output{},
+			ExpectError:    true,
+			ExpectedError:  &json.UnmarshalTypeError{Value: "number", Offset: 13, Type: reflect.TypeOf(""), Struct: "elbConfiguration", Field: "dnsname"},
+		},
+		{
+			Name: "elbv2-unmarshall-error",
 			Event: awsConfigEvent{
 				ConfigurationItem: configurationItem{
 					AWSAccountID:                 "123456789012",
@@ -276,20 +297,22 @@ func TestELBTransformerCreate(t *testing.T) {
 		tt := tt
 		t.Run(tt.Name, func(t *testing.T) {
 			et := elbTransformer{}
-			output, err := et.Create(tt.Event)
+			outputs, err := et.Create(tt.Event)
 			if tt.ExpectError {
 				require.NotNil(t, err)
-				assert.Equal(t, tt.ExpectedError, err)
+				assert.Equal(t, reflect.TypeOf(tt.ExpectedError), reflect.TypeOf(err))
+				assert.Equal(t, 0, len(outputs))
 			} else {
 				require.Nil(t, err)
+				output := outputs[0] // Load balancers will only have one Output struct since they only have one CreatedTime
+				assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
+				assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
+				assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
+				assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
+				assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
+				assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
+				assert.True(t, reflect.DeepEqual(tt.ExpectedOutput.Changes, output.Changes), "The expected changes were different than the result")
 			}
-			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
-			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
-			assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
-			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
-			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
-			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
-			assert.True(t, reflect.DeepEqual(tt.ExpectedOutput.Changes, output.Changes), "The expected changes were different than the result")
 		})
 	}
 }
@@ -324,26 +347,68 @@ func TestELBTransformerUpdate(t *testing.T) {
 			ExpectError:    true,
 			ExpectedError:  ErrMissingValue{Field: "AWSAccountID"},
 		},
+		{
+			Name: "elb-update-unmarshal-error",
+			Event: awsConfigEvent{
+				ConfigurationItem: configurationItem{
+					AWSAccountID:                 "123456789012",
+					AWSRegion:                    "us-west-2",
+					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
+					ResourceType:                 "AWS::ElasticLoadBalancing::LoadBalancer",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
+					Tags:                         map[string]string{"foo": "bar"},
+					Configuration:                json.RawMessage(`{"dnsname": 1}`),
+				},
+				ConfigurationItemDiff: configurationItemDiff{
+					ChangeType: update,
+				},
+			},
+			ExpectedOutput: Output{},
+			ExpectError:    true,
+			ExpectedError:  &json.UnmarshalTypeError{Value: "number", Offset: 13, Type: reflect.TypeOf(""), Struct: "elbConfiguration", Field: "dnsname"},
+		},
+		{
+			Name: "elb-delete-unmarshal-error",
+			Event: awsConfigEvent{
+				ConfigurationItem: configurationItem{
+					AWSAccountID:                 "123456789012",
+					AWSRegion:                    "us-west-2",
+					ConfigurationItemCaptureTime: "2019-03-27T19:06:49.363Z",
+					ResourceType:                 "AWS::ElasticLoadBalancing::LoadBalancer",
+					ARN:                          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
+					Tags:                         map[string]string{"foo": "bar"},
+					Configuration:                json.RawMessage(`{"dnsname": 1}`),
+				},
+				ConfigurationItemDiff: configurationItemDiff{
+					ChangeType: delete,
+				},
+			},
+			ExpectedOutput: Output{},
+			ExpectError:    true,
+			ExpectedError:  &json.UnmarshalTypeError{Value: "number", Offset: 13, Type: reflect.TypeOf(""), Struct: "elbConfiguration", Field: "dnsname"},
+		},
 	}
 
 	for _, tt := range tc {
 		tt := tt
 		t.Run(tt.Name, func(t *testing.T) {
 			et := elbTransformer{}
-			output, err := et.Update(tt.Event)
+			outputs, err := et.Update(tt.Event)
 			if tt.ExpectError {
 				require.NotNil(t, err)
-				assert.Equal(t, tt.ExpectedError, err)
+				assert.Equal(t, reflect.TypeOf(tt.ExpectedError), reflect.TypeOf(err))
+				assert.Equal(t, 0, len(outputs))
 			} else {
 				require.Nil(t, err)
+				output := outputs[0] // Load balancers will only have one Output struct since they only have one CreatedTime
+				assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
+				assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
+				assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
+				assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
+				assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
+				assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
+				assert.True(t, reflect.DeepEqual(tt.ExpectedOutput.Changes, output.Changes), "The expected changes were different than the result")
 			}
-			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
-			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
-			assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
-			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
-			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
-			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
-			assert.True(t, reflect.DeepEqual(tt.ExpectedOutput.Changes, output.Changes), "The expected changes were different than the result")
 		})
 	}
 }
@@ -369,7 +434,7 @@ func TestELBTransformerDelete(t *testing.T) {
 				ConfigurationItemDiff: configurationItemDiff{
 					ChangeType: delete,
 					ChangedProperties: map[string]json.RawMessage{
-						"Configuration":                   json.RawMessage("{\"previousValue\":{\"loadBalancerName\":\"config-test-elb\",\"canonicalHostedZoneNameID\":\"Z1H1FL5HABSF5\",\"listenerDescriptions\":[{\"listener\":{\"protocol\":\"HTTP\",\"loadBalancerPort\":80,\"instanceProtocol\":\"HTTP\",\"instancePort\":80},\"policyNames\":[]}],\"policies\":{\"appCookieStickinessPolicies\":[],\"otherPolicies\":[],\"lbcookieStickinessPolicies\":[]},\"backendServerDescriptions\":[],\"availabilityZones\":[\"us-west-2a\",\"us-west-2b\",\"us-west-2c\",\"us-west-2d\"],\"subnets\":[\"subnet-24b88c41\",\"subnet-7b600d22\",\"subnet-94bbf1e3\",\"subnet-ee4140c6\"],\"sourceSecurityGroup\":{\"ownerAlias\":\"917546781095\",\"groupName\":\"default\"},\"securityGroups\":[\"sg-51164235\"],\"createdTime\":1553713467830,\"scheme\":\"internal\",\"dnsname\":\"internal-config-test-elb-67410663.us-west-2.elb.amazonaws.com\",\"vpcid\":\"vpc-8af6d7ef\"},\"updatedValue\":null,\"changeType\":\"DELETE\"}"),
+						"Configuration":                   json.RawMessage("{\"previousValue\":{\"loadBalancerName\":\"config-test-elb\",\"canonicalHostedZoneNameID\":\"Z1H1FL5HABSF5\",\"listenerDescriptions\":[{\"listener\":{\"protocol\":\"HTTP\",\"loadBalancerPort\":80,\"instanceProtocol\":\"HTTP\",\"instancePort\":80},\"policyNames\":[]}],\"policies\":{\"appCookieStickinessPolicies\":[],\"otherPolicies\":[],\"lbcookieStickinessPolicies\":[]},\"backendServerDescriptions\":[],\"availabilityZones\":[\"us-west-2a\",\"us-west-2b\",\"us-west-2c\",\"us-west-2d\"],\"subnets\":[\"subnet-24b88c41\",\"subnet-7b600d22\",\"subnet-94bbf1e3\",\"subnet-ee4140c6\"],\"sourceSecurityGroup\":{\"ownerAlias\":\"917546781095\",\"groupName\":\"default\"},\"securityGroups\":[\"sg-51164235\"],\"createdTime\":\"2019-03-27T19:04:27.830Z\",\"scheme\":\"internal\",\"dnsname\":\"internal-config-test-elb-67410663.us-west-2.elb.amazonaws.com\",\"vpcid\":\"vpc-8af6d7ef\"},\"updatedValue\":null,\"changeType\":\"DELETE\"}"),
 						"SupplementaryConfiguration.Tags": json.RawMessage("{\"previousValue\":null,\"updatedValue\":null,\"changeType\":\"DELETE\"}"),
 					},
 				},
@@ -402,7 +467,7 @@ func TestELBTransformerDelete(t *testing.T) {
 				ConfigurationItemDiff: configurationItemDiff{
 					ChangeType: delete,
 					ChangedProperties: map[string]json.RawMessage{
-						"Configuration": json.RawMessage("{\"previousValue\":{\"loadBalancerName\":\"config-test-elb\",\"canonicalHostedZoneNameID\":\"Z1H1FL5HABSF5\",\"listenerDescriptions\":[{\"listener\":{\"protocol\":\"HTTP\",\"loadBalancerPort\":80,\"instanceProtocol\":\"HTTP\",\"instancePort\":80},\"policyNames\":[]}],\"policies\":{\"appCookieStickinessPolicies\":[],\"otherPolicies\":[],\"lbcookieStickinessPolicies\":[]},\"backendServerDescriptions\":[],\"availabilityZones\":[\"us-west-2a\",\"us-west-2b\",\"us-west-2c\",\"us-west-2d\"],\"subnets\":[\"subnet-24b88c41\",\"subnet-7b600d22\",\"subnet-94bbf1e3\",\"subnet-ee4140c6\"],\"sourceSecurityGroup\":{\"ownerAlias\":\"917546781095\",\"groupName\":\"default\"},\"securityGroups\":[\"sg-51164235\"],\"createdTime\":1553713467830,\"scheme\":\"internal\",\"dnsname\":\"internal-config-test-elb-67410663.us-west-2.elb.amazonaws.com\",\"vpcid\":\"vpc-8af6d7ef\"},\"updatedValue\":null,\"changeType\":\"DELETE\"}"),
+						"Configuration": json.RawMessage("{\"previousValue\":{\"loadBalancerName\":\"config-test-elb\",\"canonicalHostedZoneNameID\":\"Z1H1FL5HABSF5\",\"listenerDescriptions\":[{\"listener\":{\"protocol\":\"HTTP\",\"loadBalancerPort\":80,\"instanceProtocol\":\"HTTP\",\"instancePort\":80},\"policyNames\":[]}],\"policies\":{\"appCookieStickinessPolicies\":[],\"otherPolicies\":[],\"lbcookieStickinessPolicies\":[]},\"backendServerDescriptions\":[],\"availabilityZones\":[\"us-west-2a\",\"us-west-2b\",\"us-west-2c\",\"us-west-2d\"],\"subnets\":[\"subnet-24b88c41\",\"subnet-7b600d22\",\"subnet-94bbf1e3\",\"subnet-ee4140c6\"],\"sourceSecurityGroup\":{\"ownerAlias\":\"917546781095\",\"groupName\":\"default\"},\"securityGroups\":[\"sg-51164235\"],\"createdTime\":\"2019-03-27T19:04:27.830Z\",\"scheme\":\"internal\",\"dnsname\":\"internal-config-test-elb-67410663.us-west-2.elb.amazonaws.com\",\"vpcid\":\"vpc-8af6d7ef\"},\"updatedValue\":null,\"changeType\":\"DELETE\"}"),
 					},
 				},
 			},
@@ -501,7 +566,7 @@ func TestELBTransformerDelete(t *testing.T) {
 				ConfigurationItemDiff: configurationItemDiff{
 					ChangeType: delete,
 					ChangedProperties: map[string]json.RawMessage{
-						"Configuration":                   json.RawMessage("{\"previousValue\":{\"loadBalancerName\":\"config-test-elb\",\"canonicalHostedZoneNameID\":\"Z1H1FL5HABSF5\",\"listenerDescriptions\":[{\"listener\":{\"protocol\":\"HTTP\",\"loadBalancerPort\":80,\"instanceProtocol\":\"HTTP\",\"instancePort\":80},\"policyNames\":[]}],\"policies\":{\"appCookieStickinessPolicies\":[],\"otherPolicies\":[],\"lbcookieStickinessPolicies\":[]},\"backendServerDescriptions\":[],\"availabilityZones\":[\"us-west-2a\",\"us-west-2b\",\"us-west-2c\",\"us-west-2d\"],\"subnets\":[\"subnet-24b88c41\",\"subnet-7b600d22\",\"subnet-94bbf1e3\",\"subnet-ee4140c6\"],\"sourceSecurityGroup\":{\"ownerAlias\":\"917546781095\",\"groupName\":\"default\"},\"securityGroups\":[\"sg-51164235\"],\"createdTime\":1553713467830,\"scheme\":\"internal\",\"dnsname\":\"internal-config-test-elb-67410663.us-west-2.elb.amazonaws.com\",\"vpcid\":\"vpc-8af6d7ef\"},\"updatedValue\":null,\"changeType\":\"DELETE\"}"),
+						"Configuration":                   json.RawMessage("{\"previousValue\":{\"loadBalancerName\":\"config-test-elb\",\"canonicalHostedZoneNameID\":\"Z1H1FL5HABSF5\",\"listenerDescriptions\":[{\"listener\":{\"protocol\":\"HTTP\",\"loadBalancerPort\":80,\"instanceProtocol\":\"HTTP\",\"instancePort\":80},\"policyNames\":[]}],\"policies\":{\"appCookieStickinessPolicies\":[],\"otherPolicies\":[],\"lbcookieStickinessPolicies\":[]},\"backendServerDescriptions\":[],\"availabilityZones\":[\"us-west-2a\",\"us-west-2b\",\"us-west-2c\",\"us-west-2d\"],\"subnets\":[\"subnet-24b88c41\",\"subnet-7b600d22\",\"subnet-94bbf1e3\",\"subnet-ee4140c6\"],\"sourceSecurityGroup\":{\"ownerAlias\":\"917546781095\",\"groupName\":\"default\"},\"securityGroups\":[\"sg-51164235\"],\"createdTime\":\"2019-03-27T19:04:27.830Z\",\"scheme\":\"internal\",\"dnsname\":\"internal-config-test-elb-67410663.us-west-2.elb.amazonaws.com\",\"vpcid\":\"vpc-8af6d7ef\"},\"updatedValue\":null,\"changeType\":\"DELETE\"}"),
 						"SupplementaryConfiguration.Tags": json.RawMessage("{\"previousValue\":[{\"key\": 1}],\"updatedValue\":null,\"changeType\":\"DELETE\"}"),
 					},
 				},
@@ -516,19 +581,21 @@ func TestELBTransformerDelete(t *testing.T) {
 		tt := tt
 		t.Run(tt.Name, func(t *testing.T) {
 			et := elbTransformer{}
-			output, err := et.Delete(tt.Event)
+			outputs, err := et.Delete(tt.Event)
 			if tt.ExpectError {
 				require.NotNil(t, err)
-				assert.Equal(t, tt.ExpectedError, err)
+				assert.Equal(t, reflect.TypeOf(tt.ExpectedError), reflect.TypeOf(err))
+				assert.Equal(t, 0, len(outputs))
 			} else {
 				require.Nil(t, err)
+				output := outputs[0] // Load balancers will only have one Output struct since they only have one CreatedTime
+				assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
+				assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
+				assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
+				assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
+				assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
+				assert.True(t, reflect.DeepEqual(tt.ExpectedOutput.Changes, output.Changes), "The expected changes were different than the result")
 			}
-			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
-			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
-			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
-			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
-			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
-			assert.True(t, reflect.DeepEqual(tt.ExpectedOutput.Changes, output.Changes), "The expected changes were different than the result")
 		})
 	}
 }

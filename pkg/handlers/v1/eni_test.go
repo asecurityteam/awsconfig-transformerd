@@ -24,7 +24,7 @@ func TestTransformENI(t *testing.T) {
 			InputFile: "eni.create.json",
 			ExpectedOutput: Output{
 				AccountID:    "123456789",
-				ChangeTime:   "2020-08-21T12:00:00.000Z",
+				ChangeTime:   "2020-08-14T21:00:00.000Z",
 				Region:       "ap-southeast-2",
 				ResourceType: "AWS::EC2::NetworkInterface",
 				ARN:          "arn:aws:ec2:ap-southeast-2:123456789:network-interface/eni-abcdefghi1234567",
@@ -80,13 +80,13 @@ func TestTransformENI(t *testing.T) {
 			require.Nil(t, err)
 
 			transformer := &Transformer{LogFn: logFn}
-			output, err := transformer.Handle(context.Background(), input)
+			outputs, err := transformer.Handle(context.Background(), input)
 			if tt.ExpectError {
 				require.NotNil(t, err)
 			} else {
 				require.Nil(t, err)
 			}
-
+			output := outputs[0]
 			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
 			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
 			assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
@@ -128,7 +128,7 @@ func TestFilterENI(t *testing.T) {
 
 		createOutput, err := transformer.Create(filteredConfigEvent)
 		assert.Nil(t, err)
-		assert.True(t, createOutput.Changes == nil, "Expected empty changes due to filtering")
+		assert.True(t, createOutput[0].Changes == nil, "Expected empty changes due to filtering")
 	})
 
 	t.Run("eni-deleted", func(t *testing.T) {
@@ -147,7 +147,7 @@ func TestFilterENI(t *testing.T) {
 
 		deleteOutput, err := transformer.Delete(filteredConfigEvent)
 		assert.Nil(t, err)
-		assert.True(t, deleteOutput.Changes == nil, "Expected empty changes due to filtering")
+		assert.True(t, deleteOutput[0].Changes == nil, "Expected empty changes due to filtering")
 	})
 }
 
