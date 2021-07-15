@@ -5,13 +5,12 @@ go 1.12
 require (
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883 // indirect
 	github.com/asecurityteam/logevent v0.0.0-20190225122144-b32737d8d51c
-	github.com/asecurityteam/runhttp v0.0.0-20190308211650-60620809c493
+	github.com/asecurityteam/runhttp v0.4.0
 	github.com/asecurityteam/serverfull v0.1.0
 	github.com/asecurityteam/settings v0.1.0
 	github.com/aws/aws-lambda-go v1.10.0 // indirect
 	github.com/aws/aws-sdk-go v1.19.6
 	github.com/fatih/structs v1.1.0 // indirect
-	github.com/go-chi/chi v3.3.4+incompatible // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible // indirect
 	github.com/golang/mock v1.4.4 // indirect
 	github.com/justinas/alice v1.2.0 // indirect
