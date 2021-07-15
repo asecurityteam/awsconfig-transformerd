@@ -7,7 +7,7 @@ require (
 	github.com/asecurityteam/logevent v0.0.0-20190225122144-b32737d8d51c
 	github.com/asecurityteam/runhttp v0.0.0-20190308211650-60620809c493
 	github.com/asecurityteam/serverfull v0.1.0
-	github.com/asecurityteam/settings v0.1.0
+	github.com/asecurityteam/settings v0.4.0
 	github.com/aws/aws-lambda-go v1.10.0 // indirect
 	github.com/aws/aws-sdk-go v1.19.6
 	github.com/fatih/structs v1.1.0 // indirect
