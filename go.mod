@@ -24,7 +24,7 @@ require (
 	github.com/rs/zerolog v1.13.0 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/spf13/cast v1.3.0 // indirect
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	golang.org/x/net v0.0.0-20200625001655-4c5254603344 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
