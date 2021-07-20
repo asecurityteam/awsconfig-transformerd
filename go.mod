@@ -9,7 +9,7 @@ require (
 	github.com/asecurityteam/serverfull v0.1.0
 	github.com/asecurityteam/settings v0.1.0
 	github.com/aws/aws-lambda-go v1.10.0 // indirect
-	github.com/aws/aws-sdk-go v1.19.6
+	github.com/aws/aws-sdk-go v1.40.4
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/go-chi/chi v3.3.4+incompatible // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible // indirect
@@ -25,7 +25,7 @@ require (
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/spf13/cast v1.3.0 // indirect
 	github.com/stretchr/testify v1.6.1
-	golang.org/x/net v0.0.0-20200625001655-4c5254603344 // indirect
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )
