@@ -47,9 +47,6 @@ type networkInterface struct {
 			IPOwnerID     string `json:"ipOwnerId"`
 		} `json:"association"`
 	} `json:"privateIpAddresses"`
-	Attachment struct {
-		AttachTime string `json:"attachTime"`
-	} `json:"attachment"`
 }
 
 type networkInterfaceDiff struct {
@@ -70,108 +67,34 @@ type ec2ChangedPropsARN struct {
 	ChangeType    string `json:"changeType"`
 }
 
-type eniIPList struct {
-	PrivateIPs []string
-	PublicIPs  []string
-	Hostnames  []string
-}
-
 type ec2Transformer struct{}
 
-func (t ec2Transformer) Create(event awsConfigEvent) ([]Output, error) {
-	outputs := []Output{}
-	baseOutput, err := getBaseOutput(event.ConfigurationItem)
+func (t ec2Transformer) Create(event awsConfigEvent) (Output, error) {
+	output, err := getBaseOutput(event.ConfigurationItem)
 	if err != nil {
-		return []Output{}, err
+		return Output{}, err
 	}
+
 	// if a resource is created for the first time, there is no diff.
 	// just read the configuration
 	var config ec2Configuration
 	if err := json.Unmarshal(event.ConfigurationItem.Configuration, &config); err != nil {
-		return []Output{}, err
+		return Output{}, err
 	}
-
-	hasEni := false
-	for i := range config.NetworkInterfaces {
-		hasEni = true
-		output := baseOutput
-		change := Change{}
-		output.ChangeTime = config.NetworkInterfaces[i].Attachment.AttachTime
-		private, public, dns := extractNetworkInterfaceInfo(&config.NetworkInterfaces[i])
-		change.PrivateIPAddresses = append(change.PrivateIPAddresses, private...)
-		change.PublicIPAddresses = append(change.PublicIPAddresses, public...)
-		change.Hostnames = append(change.Hostnames, dns...)
-		change.ChangeType = added
-		output.Changes = append(output.Changes, change)
-		outputs = append(outputs, output)
-	}
-	if !hasEni {
-		return []Output{}, nil // Reject EC2s with no ENI
-	}
-
-	return outputs, nil
+	change := extractEC2NetworkInfo(&config)
+	change.ChangeType = added
+	output.Changes = append(output.Changes, change)
+	return output, nil
 }
 
-func initializeAttachMapEntry(attachMap map[string]*eniIPList, attachTime string) {
-	attachMap[attachTime] = &eniIPList{}
-	attachMap[attachTime].PrivateIPs = make([]string, 0)
-	attachMap[attachTime].PublicIPs = make([]string, 0)
-	attachMap[attachTime].Hostnames = make([]string, 0)
-}
-
-func separateAddedChanges(baseOutput Output, addedChange Change, privateIPMap map[string]string, publicIPMap map[string]string, hostnameMap map[string]string) []Output {
-	outputs := make([]Output, 0)
-	attachMap := make(map[string]*eniIPList)
-	// separate IPs & hostnames by attachTime
-	for _, ip := range addedChange.PrivateIPAddresses {
-		attachTime := privateIPMap[ip]
-		if _, ok := attachMap[attachTime]; !ok {
-			initializeAttachMapEntry(attachMap, attachTime)
-		}
-		attachMap[attachTime].PrivateIPs = append(attachMap[attachTime].PrivateIPs, ip)
-	}
-	for _, ip := range addedChange.PublicIPAddresses {
-		attachTime := publicIPMap[ip]
-		if _, ok := attachMap[attachTime]; !ok {
-			initializeAttachMapEntry(attachMap, attachTime)
-		}
-		attachMap[attachTime].PublicIPs = append(attachMap[attachTime].PublicIPs, ip)
-	}
-	for _, hostname := range addedChange.Hostnames {
-		attachTime := hostnameMap[hostname]
-		if _, ok := attachMap[attachTime]; !ok {
-			initializeAttachMapEntry(attachMap, attachTime)
-		}
-		attachMap[attachTime].Hostnames = append(attachMap[attachTime].Hostnames, hostname)
-	}
-
-	// create Output structs with each attachTime
-	for attachTime, ipList := range attachMap {
-		output := baseOutput
-		change := Change{ChangeType: added}
-		change.PrivateIPAddresses = append(change.PrivateIPAddresses, ipList.PrivateIPs...)
-		change.PublicIPAddresses = append(change.PublicIPAddresses, ipList.PublicIPs...)
-		change.Hostnames = append(change.Hostnames, ipList.Hostnames...)
-		output.Changes = append(output.Changes, change)
-		output.ChangeTime = attachTime
-		outputs = append(outputs, output)
-	}
-
-	return outputs
-}
-
-func (t ec2Transformer) Update(event awsConfigEvent) ([]Output, error) {
-	outputs := make([]Output, 0)
-	baseOutput, err := getBaseOutput(event.ConfigurationItem)
+func (t ec2Transformer) Update(event awsConfigEvent) (Output, error) {
+	output, err := getBaseOutput(event.ConfigurationItem)
 	if err != nil {
-		return []Output{}, err
+		return Output{}, err
 	}
 
 	addedChange := Change{ChangeType: added}
 	deletedChange := Change{ChangeType: deleted}
-	addPrivateIPMap := make(map[string]string) // IP to attachTime
-	addPublicIPMap := make(map[string]string)
-	addHostnameMap := make(map[string]string)
 	// If an update was detected, check to see if any changes to the NetworkInterfaces occurred
 	for k, v := range event.ConfigurationItemDiff.ChangedProperties {
 		if !strings.HasPrefix(k, "Configuration.NetworkInterfaces.") {
@@ -179,7 +102,7 @@ func (t ec2Transformer) Update(event awsConfigEvent) ([]Output, error) {
 		}
 		var diff networkInterfaceDiff
 		if err := json.Unmarshal(v, &diff); err != nil {
-			return []Output{}, err
+			return Output{}, err
 		}
 		ni := diff.UpdatedValue
 		changes := &addedChange
@@ -191,39 +114,24 @@ func (t ec2Transformer) Update(event awsConfigEvent) ([]Output, error) {
 		changes.PrivateIPAddresses = append(changes.PrivateIPAddresses, private...)
 		changes.PublicIPAddresses = append(changes.PublicIPAddresses, public...)
 		changes.Hostnames = append(changes.Hostnames, dns...)
-		// collect added IPs & hostnames and their associated attachTimes, for later EC2 event splitting
-		if diff.ChangeType != delete {
-			for _, privateIP := range private {
-				addPrivateIPMap[privateIP] = ni.Attachment.AttachTime
-			}
-			for _, publicIP := range public {
-				addPublicIPMap[publicIP] = ni.Attachment.AttachTime
-			}
-			for _, hostname := range dns {
-				addHostnameMap[hostname] = ni.Attachment.AttachTime
-			}
-		}
 	}
 
 	// We need to compute the symmetric difference of the added changes and the removed changes
 	// i.e. remove entries that show up as both added and removed
 	symmetricDifference(&addedChange, &deletedChange)
 	if len(addedChange.PrivateIPAddresses) > 0 || len(addedChange.PublicIPAddresses) > 0 || len(addedChange.Hostnames) > 0 {
-		addedOutputs := separateAddedChanges(baseOutput, addedChange, addPrivateIPMap, addPublicIPMap, addHostnameMap)
-		outputs = append(outputs, addedOutputs...)
+		output.Changes = append(output.Changes, addedChange)
 	}
 	if len(deletedChange.PrivateIPAddresses) > 0 || len(deletedChange.PublicIPAddresses) > 0 || len(deletedChange.Hostnames) > 0 {
-		deletedOutput := baseOutput
-		deletedOutput.Changes = append(deletedOutput.Changes, deletedChange)
-		outputs = append(outputs, deletedOutput)
+		output.Changes = append(output.Changes, deletedChange)
 	}
-	return outputs, nil
+	return output, nil
 }
 
-func (t ec2Transformer) Delete(event awsConfigEvent) ([]Output, error) {
+func (t ec2Transformer) Delete(event awsConfigEvent) (Output, error) {
 	output, err := getBaseOutput(event.ConfigurationItem)
 	if err != nil {
-		return []Output{}, err
+		return Output{}, err
 	}
 
 	// if a resource is deleted, the tags are no longer present in the base object.
@@ -233,22 +141,22 @@ func (t ec2Transformer) Delete(event awsConfigEvent) ([]Output, error) {
 	if output.ARN == "" {
 		previousARNRaw, ok := changeProps["ARN"]
 		if !ok {
-			return []Output{}, ErrMissingValue{Field: "ARN"}
+			return Output{}, ErrMissingValue{Field: "ARN"}
 		}
 		var changedPropsARN ec2ChangedPropsARN
 		if err := json.Unmarshal(previousARNRaw, &changedPropsARN); err != nil {
-			return []Output{}, err
+			return Output{}, err
 		}
 		output.ARN = changedPropsARN.PreviousValue
 	}
 
 	configDiffRaw, ok := changeProps["Configuration"]
 	if !ok {
-		return []Output{}, errors.New("Invalid configuration diff")
+		return Output{}, errors.New("Invalid configuration diff")
 	}
 	var configDiff ec2ConfigurationDiff
 	if err := json.Unmarshal(configDiffRaw, &configDiff); err != nil {
-		return []Output{}, err
+		return Output{}, err
 	}
 	for _, tag := range configDiff.PreviousValue.Tags {
 		output.Tags[tag.Key] = tag.Value
@@ -258,7 +166,7 @@ func (t ec2Transformer) Delete(event awsConfigEvent) ([]Output, error) {
 	change := extractEC2NetworkInfo(configDiff.PreviousValue)
 	change.ChangeType = deleted
 	output.Changes = append(output.Changes, change)
-	return []Output{output}, nil
+	return output, nil
 }
 
 // remove changes that show up as both added and deleted

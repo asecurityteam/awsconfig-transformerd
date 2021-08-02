@@ -3,7 +3,6 @@ package v1
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -99,7 +98,7 @@ type Transformer struct {
 // Handle is an AWS Lambda handler which takes, as input, an SNS configuration change event notification.
 // The input is transformed into a JSON structure which highlights changes in the network details for this resource.
 // The output is the transformed JSON.
-func (t *Transformer) Handle(ctx context.Context, input Input) ([]Output, error) {
+func (t *Transformer) Handle(ctx context.Context, input Input) (Output, error) {
 
 	if ts, err := time.Parse(time.RFC3339Nano, input.ProcessedTimestamp); err == nil {
 		t.StatFn(ctx).Timing("event.awsconfig.transformer.event.delay", time.Since(ts))
@@ -109,50 +108,48 @@ func (t *Transformer) Handle(ctx context.Context, input Input) ([]Output, error)
 	err := json.Unmarshal([]byte(input.Message), &event)
 	if err != nil {
 		t.LogFn(ctx).Error(logs.TransformError{Reason: err.Error()})
-		return []Output{}, err
+		return Output{}, err
 	}
 
-	var outputs []Output
+	var output Output
 
 	switch event.ConfigurationItem.ResourceType {
 	case configservice.ResourceTypeAwsEc2Instance:
-		outputs, err = transformOutput(event, ec2Transformer{})
+		output, err = transformOutput(event, ec2Transformer{})
 	case configservice.ResourceTypeAwsElasticLoadBalancingLoadBalancer:
-		outputs, err = transformOutput(event, elbTransformer{})
+		output, err = transformOutput(event, elbTransformer{})
 	case configservice.ResourceTypeAwsElasticLoadBalancingV2LoadBalancer:
 		// ALB Config events have the same as ELBs
-		outputs, err = transformOutput(event, elbTransformer{})
+		output, err = transformOutput(event, elbTransformer{})
 	case configservice.ResourceTypeAwsEc2NetworkInterface:
-		outputs, err = transformOutput(event, eniTransformer{})
+		output, err = transformOutput(event, eniTransformer{})
 	default:
 		t.LogFn(ctx).Info(logs.UnsupportedResource{Resource: event.ConfigurationItem.ResourceType})
-		err = errors.New("Unsupported resource type; must be one of EC2, ELB, ENI")
 	}
 
 	if err != nil {
 		t.LogFn(ctx).Error(logs.TransformError{Reason: err.Error()})
 		// do not proceed to extract tags if the event is broken/malformed
-		return []Output{}, err
+		return Output{}, err
 	}
 
 	tagChanges, err := extractTagChanges(event.ConfigurationItemDiff)
 	if err != nil {
 		t.LogFn(ctx).Error(logs.TransformError{Reason: err.Error()})
-		return []Output{}, err
+		return Output{}, err
 	}
 	if len(tagChanges) > 0 {
 		op := added
 		if event.MessageType == delete {
 			op = deleted
 		}
-		for i := range outputs {
-			outputs[i].Changes = append(outputs[i].Changes, Change{
-				TagChanges: tagChanges,
-				ChangeType: op,
-			})
-		}
+		output.Changes = append(output.Changes, Change{
+			TagChanges: tagChanges,
+			ChangeType: op,
+		})
 	}
-	return outputs, err
+
+	return output, err
 }
 
 func extractTagChanges(ev configurationItemDiff) ([]TagChange, error) {
@@ -178,31 +175,31 @@ func extractTagChanges(ev configurationItemDiff) ([]TagChange, error) {
 // ResourceTransformer takes AWS Config Events, and returns transformed
 // output.
 type ResourceTransformer interface {
-	Create(event awsConfigEvent) ([]Output, error)
-	Update(event awsConfigEvent) ([]Output, error)
-	Delete(event awsConfigEvent) ([]Output, error)
+	Create(event awsConfigEvent) (Output, error)
+	Update(event awsConfigEvent) (Output, error)
+	Delete(event awsConfigEvent) (Output, error)
 }
 
-func transformOutput(event awsConfigEvent, resourceTransformer ResourceTransformer) ([]Output, error) {
+func transformOutput(event awsConfigEvent, resourceTransformer ResourceTransformer) (Output, error) {
 	switch event.ConfigurationItemDiff.ChangeType {
 	case create:
 		output, err := resourceTransformer.Create(event)
 		if err != nil {
-			return []Output{}, err
+			return Output{}, err
 		}
 		return output, nil
 	case update:
 		output, err := resourceTransformer.Update(event)
 		if err != nil {
-			return []Output{}, err
+			return Output{}, err
 		}
 		return output, nil
 	case delete:
 		output, err := resourceTransformer.Delete(event)
 		if err != nil {
-			return []Output{}, err
+			return Output{}, err
 		}
 		return output, nil
 	}
-	return []Output{}, errors.New("Event was not create, update, or delete")
+	return Output{}, nil
 }
