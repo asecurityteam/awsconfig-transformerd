@@ -17,6 +17,8 @@ github.com/asecurityteam/logevent v1.4.0 h1:sZ4X2JRzONcW3/jNapn0tjhc+t4K9gI1eHFz
 github.com/asecurityteam/logevent v1.4.0/go.mod h1:honZzywisDv/eTdOIWaNjJ1p0zgCG68zARUkr35CYDA=
 github.com/asecurityteam/logevent v1.6.0 h1:2Vv8BdKi6aNksF501NmePAY2N/bKkLHUoZULC4RlMwk=
 github.com/asecurityteam/logevent v1.6.0/go.mod h1:yE2cmFsA+bE70rBRCJHAoLK+mE5M5HWwXrYQz1oHlz4=
+github.com/asecurityteam/logevent v1.6.1 h1:D/V11UxgZMBrktTgL3ugRO4hKdBWkz/xLBlpqDq4PoM=
+github.com/asecurityteam/logevent v1.6.1/go.mod h1:wtopE0Pe+072poxy+lGBMah604Uu6/BVwFWRwKwF3TA=
 github.com/asecurityteam/runhttp v0.0.0-20190308211650-60620809c493 h1:NlxDw3V5m6a7T/dY8LEzEW5DB+ByC602V8H26xT4xUg=
 github.com/asecurityteam/runhttp v0.0.0-20190308211650-60620809c493/go.mod h1:13Zb/7m5FQVu1gHjt+YDse6aqfJ5LuC79u8xjM64jrI=
 github.com/asecurityteam/runhttp v0.4.0 h1:V0sjkLA7Onkmpnnu574yQL8k9g4JEtyDvWnmJ2fTZ4s=
@@ -58,6 +60,8 @@ github.com/golang/mock v1.5.0/go.mod h1:CWnOUgYIOo4TcNZ0wHX3YZCqsaM1I1Jvs6v3mP3K
 github.com/golang/mock v1.6.0/go.mod h1:p6yTPP+5HYm5mzsMV8JkE6ZKdX+/wYM6Hr+LicevLPs=
 github.com/google/uuid v1.2.0 h1:qJYtXnJRWmpe7m/3XlyhrsLrEURqHRM2kxzoxXqyUDs=
 github.com/google/uuid v1.2.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
+github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af h1:pmfjZENx5imkbgOkpRUYLnmbU7UEFbjtDA2hxJ1ichM=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
 github.com/justinas/alice v1.2.0 h1:+MHSA/vccVCF4Uq37S42jwlkvI2Xzl7zTPCN5BnZNVo=

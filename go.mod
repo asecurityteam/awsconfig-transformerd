@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883 // indirect
-	github.com/asecurityteam/logevent v1.6.0
+	github.com/asecurityteam/logevent v1.6.1
 	github.com/asecurityteam/runhttp v0.4.0
 	github.com/asecurityteam/serverfull v0.5.1
 	github.com/asecurityteam/settings v0.4.0
