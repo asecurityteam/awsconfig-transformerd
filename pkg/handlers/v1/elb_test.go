@@ -57,27 +57,6 @@ func TestTransformELB(t *testing.T) {
 			},
 		},
 		{
-			Name:      "elb-updated",
-			InputFile: "elb.update.json",
-			ExpectedOutput: Output{
-				AccountID:    "123456789012",
-				ChangeTime:   "2019-03-27T19:12:28.624Z",
-				Region:       "us-west-2",
-				ResourceType: "AWS::ElasticLoadBalancing::LoadBalancer",
-				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
-				Tags: map[string]string{
-					"key1": "1",
-					"key2": "2",
-				},
-				Changes: []Change{
-					{
-						ChangeType: added,
-						TagChanges: []TagChange{addedTags[0]},
-					},
-				},
-			},
-		},
-		{
 			Name:      "elb-deleted",
 			InputFile: "elb.delete.json",
 			ExpectedOutput: Output{
@@ -114,27 +93,6 @@ func TestTransformELB(t *testing.T) {
 					{
 						Hostnames:  []string{"internal-config-test-alb-012345678.us-west-2.elb.amazonaws.com"},
 						ChangeType: added,
-					},
-				},
-			},
-		},
-		{
-			Name:      "elbv2-updated",
-			InputFile: "elbv2.update.json",
-			ExpectedOutput: Output{
-				AccountID:    "123456789012",
-				ChangeTime:   "2019-03-27T19:12:03.211Z",
-				Region:       "us-west-2",
-				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
-				ResourceType: "AWS::ElasticLoadBalancingV2::LoadBalancer",
-				Tags: map[string]string{
-					"key1": "1",
-					"key2": "2",
-				},
-				Changes: []Change{
-					{
-						ChangeType: added,
-						TagChanges: addedTags,
 					},
 				},
 			},
@@ -215,7 +173,94 @@ func TestTransformELB(t *testing.T) {
 			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
 			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
 			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
-			assert.Equal(t, tt.ExpectedOutput.Changes, tt.ExpectedOutput.Changes)
+			assert.ElementsMatch(t, tt.ExpectedOutput.Changes, output.Changes)
+		})
+	}
+}
+
+func TestTransformELBTagUpdate(t *testing.T) {
+	tc := []struct {
+		Name           string
+		InputFile      string
+		ExpectedOutput Output
+		ExpectError    bool
+	}{
+		{
+			Name:      "elb-updated",
+			InputFile: "elb.update.json",
+			ExpectedOutput: Output{
+				AccountID:    "123456789012",
+				ChangeTime:   "2019-03-27T19:12:28.624Z",
+				Region:       "us-west-2",
+				ResourceType: "AWS::ElasticLoadBalancing::LoadBalancer",
+				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/config-test-elb",
+				Tags: map[string]string{
+					"key1": "1",
+					"key2": "2",
+				},
+				Changes: []Change{
+					{
+						ChangeType: added,
+						TagChanges: []TagChange{addedTags[1]},
+					},
+				},
+			},
+		},
+		{
+			Name:      "elbv2-updated",
+			InputFile: "elbv2.update.json",
+			ExpectedOutput: Output{
+				AccountID:    "123456789012",
+				ChangeTime:   "2019-03-27T19:12:03.211Z",
+				Region:       "us-west-2",
+				ARN:          "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/config-test-alb/5be197427c282f61",
+				ResourceType: "AWS::ElasticLoadBalancingV2::LoadBalancer",
+				Tags: map[string]string{
+					"key1": "1",
+					"key2": "2",
+				},
+				Changes: []Change{
+					{
+						ChangeType: added,
+						TagChanges: addedTags,
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tc {
+		tt := tt
+		t.Run(tt.Name, func(t *testing.T) {
+			data, err := ioutil.ReadFile(filepath.Join("testdata", tt.InputFile))
+			require.Nil(t, err)
+
+			var input Input
+			err = json.Unmarshal(data, &input)
+			require.Nil(t, err)
+
+			transformer := &Transformer{LogFn: logFn}
+			output, err := transformer.Handle(context.Background(), input)
+			if tt.ExpectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
+			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
+			assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
+			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
+			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
+			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
+			assert.Equal(t, len(tt.ExpectedOutput.Changes), len(output.Changes))
+
+			for i := range tt.ExpectedOutput.Changes {
+				expectedChange := tt.ExpectedOutput.Changes[i]
+				actualChange := output.Changes[i]
+				assert.Equal(t, expectedChange.ChangeType, actualChange.ChangeType)
+				assert.Equal(t, len(expectedChange.TagChanges), len(actualChange.TagChanges))
+				assert.ElementsMatch(t, expectedChange.TagChanges, actualChange.TagChanges)
+			}
 		})
 	}
 }
@@ -289,7 +334,7 @@ func TestELBTransformerCreate(t *testing.T) {
 			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
 			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
 			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
-			assert.True(t, reflect.DeepEqual(tt.ExpectedOutput.Changes, output.Changes), "The expected changes were different than the result")
+			assert.ElementsMatch(t, tt.ExpectedOutput.Changes, output.Changes)
 		})
 	}
 }
@@ -343,7 +388,7 @@ func TestELBTransformerUpdate(t *testing.T) {
 			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
 			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
 			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
-			assert.True(t, reflect.DeepEqual(tt.ExpectedOutput.Changes, output.Changes), "The expected changes were different than the result")
+			assert.ElementsMatch(t, tt.ExpectedOutput.Changes, output.Changes)
 		})
 	}
 }
@@ -528,7 +573,7 @@ func TestELBTransformerDelete(t *testing.T) {
 			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
 			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
 			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
-			assert.True(t, reflect.DeepEqual(tt.ExpectedOutput.Changes, output.Changes), "The expected changes were different than the result")
+			assert.ElementsMatch(t, tt.ExpectedOutput.Changes, output.Changes)
 		})
 	}
 }
