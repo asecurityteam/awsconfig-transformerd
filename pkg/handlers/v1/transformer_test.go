@@ -283,7 +283,7 @@ func TestTransformEC2(t *testing.T) {
 			assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
 			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
 			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
-			assert.True(t, reflect.DeepEqual(tt.ExpectedOutput.Changes, output.Changes), "The expected changes were different than the result")
+			assert.ElementsMatch(t, tt.ExpectedOutput.Changes, output.Changes)
 		})
 	}
 }
