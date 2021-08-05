@@ -1,6 +1,6 @@
 module github.com/asecurityteam/awsconfig-transformerd
 
-go 1.12
+go 1.16
 
 require (
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883 // indirect
