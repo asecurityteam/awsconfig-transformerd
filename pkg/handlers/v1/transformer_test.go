@@ -346,7 +346,7 @@ func Test_extractTagChanges(t *testing.T) {
 					PreviousValue: nil,
 				},
 			},
-			true,
+			false,
 		},
 		// happy path is tested via regular add/del events for resources
 	}
