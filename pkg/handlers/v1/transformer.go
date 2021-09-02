@@ -157,7 +157,8 @@ func extractTagChanges(ev configurationItemDiff) ([]TagChange, error) {
 	for k, v := range ev.ChangedProperties {
 		if !strings.HasPrefix(k, "Configuration.TagSet.") &&
 			!strings.HasPrefix(k, "SupplementaryConfiguration.TagSet.") &&
-			!strings.HasPrefix(k, "TagSet.") {
+			!strings.HasPrefix(k, "TagSet.") &&
+			!strings.HasPrefix(k, "Configuration.Tags.") {
 			continue
 		}
 		var tc TagChange
