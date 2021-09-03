@@ -329,6 +329,25 @@ func Test_extractTagChanges(t *testing.T) {
 			make([]TagChange, 0),
 			true,
 		},
+		{
+			"tags included",
+			configurationItemDiff{
+				ChangedProperties: map[string]json.RawMessage{
+					"Configuration.Tags.1": json.RawMessage("{\"previousValue\": null, \"updatedValue\": {\"key\": \"info\", \"value\": \"I added a new tag\"}}"),
+				},
+				ChangeType: "ADD",
+			},
+			[]TagChange{
+				{
+					UpdatedValue: &Tag{
+						Key:   "info",
+						Value: "I added a new tag",
+					},
+					PreviousValue: nil,
+				},
+			},
+			false,
+		},
 		// happy path is tested via regular add/del events for resources
 	}
 	for _, tt := range tests {
