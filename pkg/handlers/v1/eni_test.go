@@ -126,7 +126,21 @@ func TestFilterENI(t *testing.T) {
 	t.Run("eni-created", func(t *testing.T) {
 		filteredConfigEvent.ConfigurationItem.Configuration = json.RawMessage(jsonFilteredConfig)
 
-		createOutput, err := transformer.Create(filteredConfigEvent)
+		createOutput, reject, err := transformer.Create(filteredConfigEvent)
+		assert.Equal(t, false, reject)
+		assert.Nil(t, err)
+		assert.True(t, createOutput.Changes == nil, "Expected empty changes due to filtering")
+	})
+
+	t.Run("eni-created", func(t *testing.T) {
+		filteredConfig.RequesterManaged = true
+		filteredConfigEvent.ConfigurationItem.Configuration = json.RawMessage(jsonFilteredConfig)
+		filteredConfigEvent.ConfigurationItem.Tags = map[string]string{
+			"tag1": "I am a tag",
+		}
+
+		createOutput, reject, err := transformer.Create(filteredConfigEvent)
+		assert.Equal(t, true, reject)
 		assert.Nil(t, err)
 		assert.True(t, createOutput.Changes == nil, "Expected empty changes due to filtering")
 	})
@@ -145,7 +159,7 @@ func TestFilterENI(t *testing.T) {
 			},
 		}
 
-		deleteOutput, err := transformer.Delete(filteredConfigEvent)
+		deleteOutput, _, err := transformer.Delete(filteredConfigEvent)
 		assert.Nil(t, err)
 		assert.True(t, deleteOutput.Changes == nil, "Expected empty changes due to filtering")
 	})
@@ -167,19 +181,19 @@ func TestErrorENI(t *testing.T) {
 	transformer := eniTransformer{}
 
 	t.Run("malformed-create-event", func(t *testing.T) {
-		_, err := transformer.Create(malformedConfigEvent)
+		_, _, err := transformer.Create(malformedConfigEvent)
 		assert.NotNil(t, err)
 		assert.Equal(t, err, ErrMissingValue{Field: "AWSAccountID"})
 	})
 
 	t.Run("malformed-update-event", func(t *testing.T) {
-		_, err := transformer.Update(malformedConfigEvent)
+		_, _, err := transformer.Update(malformedConfigEvent)
 		assert.NotNil(t, err)
 		assert.Equal(t, err, ErrMissingValue{Field: "AWSAccountID"})
 	})
 
 	t.Run("malformed-delete-event", func(t *testing.T) {
-		_, err := transformer.Delete(malformedConfigEvent)
+		_, _, err := transformer.Delete(malformedConfigEvent)
 		assert.NotNil(t, err)
 		assert.Equal(t, err, ErrMissingValue{Field: "AWSAccountID"})
 	})
@@ -191,7 +205,7 @@ func TestErrorENI(t *testing.T) {
 
 	t.Run("malformed-create-config", func(t *testing.T) {
 		malformedConfigEvent.ConfigurationItem.Configuration = malformedConfiguration
-		_, err := transformer.Create(malformedConfigEvent)
+		_, _, err := transformer.Create(malformedConfigEvent)
 		assert.NotNil(t, err)
 		expected := &json.UnmarshalTypeError{Value: "string", Offset: 27, Type: reflect.TypeOf(false), Struct: "eniConfiguration", Field: "requesterManaged"}
 		assert.Equal(t, expected, err)
@@ -203,7 +217,7 @@ func TestErrorENI(t *testing.T) {
 				"Configuration": json.RawMessage(`{"previousValue": "bad"}`),
 			},
 		}
-		_, err := transformer.Delete(malformedConfigEvent)
+		_, _, err := transformer.Delete(malformedConfigEvent)
 		assert.NotNil(t, err)
 		expected := &json.UnmarshalTypeError{Value: "string", Offset: 23, Type: reflect.TypeOf(eniConfiguration{}), Struct: "eniConfigurationDiff", Field: "previousValue"}
 		assert.Equal(t, expected, err)

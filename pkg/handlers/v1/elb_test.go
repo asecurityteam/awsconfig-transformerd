@@ -321,7 +321,8 @@ func TestELBTransformerCreate(t *testing.T) {
 		tt := tt
 		t.Run(tt.Name, func(t *testing.T) {
 			et := elbTransformer{}
-			output, err := et.Create(tt.Event)
+			output, reject, err := et.Create(tt.Event)
+			assert.Equal(t, false, reject)
 			if tt.ExpectError {
 				require.NotNil(t, err)
 				assert.Equal(t, tt.ExpectedError, err)
@@ -375,7 +376,8 @@ func TestELBTransformerUpdate(t *testing.T) {
 		tt := tt
 		t.Run(tt.Name, func(t *testing.T) {
 			et := elbTransformer{}
-			output, err := et.Update(tt.Event)
+			output, reject, err := et.Update(tt.Event)
+			assert.Equal(t, false, reject)
 			if tt.ExpectError {
 				require.NotNil(t, err)
 				assert.Equal(t, tt.ExpectedError, err)
@@ -561,7 +563,8 @@ func TestELBTransformerDelete(t *testing.T) {
 		tt := tt
 		t.Run(tt.Name, func(t *testing.T) {
 			et := elbTransformer{}
-			output, err := et.Delete(tt.Event)
+			output, reject, err := et.Delete(tt.Event)
+			assert.Equal(t, false, reject)
 			if tt.ExpectError {
 				require.NotNil(t, err)
 				assert.Equal(t, tt.ExpectedError, err)

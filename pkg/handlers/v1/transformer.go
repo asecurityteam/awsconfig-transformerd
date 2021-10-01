@@ -112,17 +112,18 @@ func (t *Transformer) Handle(ctx context.Context, input Input) (Output, error) {
 	}
 
 	var output Output
+	var reject bool
 
 	switch event.ConfigurationItem.ResourceType {
 	case configservice.ResourceTypeAwsEc2Instance:
-		output, err = transformOutput(event, ec2Transformer{})
+		output, reject, err = transformOutput(event, ec2Transformer{})
 	case configservice.ResourceTypeAwsElasticLoadBalancingLoadBalancer:
-		output, err = transformOutput(event, elbTransformer{})
+		output, reject, err = transformOutput(event, elbTransformer{})
 	case configservice.ResourceTypeAwsElasticLoadBalancingV2LoadBalancer:
 		// ALB Config events have the same as ELBs
-		output, err = transformOutput(event, elbTransformer{})
+		output, reject, err = transformOutput(event, elbTransformer{})
 	case configservice.ResourceTypeAwsEc2NetworkInterface:
-		output, err = transformOutput(event, eniTransformer{})
+		output, reject, err = transformOutput(event, eniTransformer{})
 	default:
 		t.LogFn(ctx).Info(logs.UnsupportedResource{Resource: event.ConfigurationItem.ResourceType})
 	}
@@ -138,7 +139,7 @@ func (t *Transformer) Handle(ctx context.Context, input Input) (Output, error) {
 		t.LogFn(ctx).Error(logs.TransformError{Reason: err.Error()})
 		return Output{}, err
 	}
-	if len(tagChanges) > 0 {
+	if !reject && len(tagChanges) > 0 {
 		op := added
 		if event.MessageType == delete {
 			op = deleted
@@ -176,31 +177,31 @@ func extractTagChanges(ev configurationItemDiff) ([]TagChange, error) {
 // ResourceTransformer takes AWS Config Events, and returns transformed
 // output.
 type ResourceTransformer interface {
-	Create(event awsConfigEvent) (Output, error)
-	Update(event awsConfigEvent) (Output, error)
-	Delete(event awsConfigEvent) (Output, error)
+	Create(event awsConfigEvent) (Output, bool, error)
+	Update(event awsConfigEvent) (Output, bool, error)
+	Delete(event awsConfigEvent) (Output, bool, error)
 }
 
-func transformOutput(event awsConfigEvent, resourceTransformer ResourceTransformer) (Output, error) {
+func transformOutput(event awsConfigEvent, resourceTransformer ResourceTransformer) (Output, bool, error) {
 	switch event.ConfigurationItemDiff.ChangeType {
 	case create:
-		output, err := resourceTransformer.Create(event)
+		output, reject, err := resourceTransformer.Create(event)
 		if err != nil {
-			return Output{}, err
+			return Output{}, false, err
 		}
-		return output, nil
+		return output, reject, nil
 	case update:
-		output, err := resourceTransformer.Update(event)
+		output, reject, err := resourceTransformer.Update(event)
 		if err != nil {
-			return Output{}, err
+			return Output{}, false, err
 		}
-		return output, nil
+		return output, reject, nil
 	case delete:
-		output, err := resourceTransformer.Delete(event)
+		output, reject, err := resourceTransformer.Delete(event)
 		if err != nil {
-			return Output{}, err
+			return Output{}, false, err
 		}
-		return output, nil
+		return output, reject, nil
 	}
-	return Output{}, nil
+	return Output{}, false, nil
 }
