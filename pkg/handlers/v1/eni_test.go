@@ -128,7 +128,7 @@ func TestFilterENI(t *testing.T) {
 		filteredConfigEvent.ConfigurationItem.Configuration = json.RawMessage(jsonFilteredConfig)
 
 		createOutput, reject, err := transformer.Create(filteredConfigEvent)
-		assert.Equal(t, false, reject)
+		assert.Equal(t, true, reject)
 		assert.Nil(t, err)
 		assert.True(t, createOutput.Changes == nil, "Expected empty changes due to filtering")
 	})
