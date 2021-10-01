@@ -124,6 +124,7 @@ func TestFilterENI(t *testing.T) {
 	transformer := eniTransformer{}
 
 	t.Run("eni-created", func(t *testing.T) {
+		filteredConfig.RequesterManaged = false
 		filteredConfigEvent.ConfigurationItem.Configuration = json.RawMessage(jsonFilteredConfig)
 
 		createOutput, reject, err := transformer.Create(filteredConfigEvent)
