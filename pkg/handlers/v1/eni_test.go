@@ -136,14 +136,37 @@ func TestFilterENI(t *testing.T) {
 	t.Run("eni-created-with-tags", func(t *testing.T) {
 		filteredConfig.RequesterManaged = true
 		filteredConfigEvent.ConfigurationItem.Configuration = json.RawMessage(jsonFilteredConfig)
-		filteredConfigEvent.ConfigurationItem.Tags = map[string]string{
-			"tag1": "I am a tag",
+		filteredConfigEvent.ConfigurationItemDiff = configurationItemDiff{
+			ChangedProperties: map[string]json.RawMessage{
+				"Configuration.NotTag.1": json.RawMessage("{\"previousValue\": null, \"updatedValue\": {\"key\": \"info\", \"value\": \"I added a new tag\"}}"),
+			},
 		}
 
 		createOutput, reject, err := transformer.Create(filteredConfigEvent)
 		assert.Equal(t, true, reject)
 		assert.Nil(t, err)
 		assert.True(t, createOutput.Changes == nil, "Expected empty changes due to filtering")
+	})
+
+	t.Run("eni-updated", func(t *testing.T) {
+		filteredConfig.RequesterManaged = true
+		filteredConfigDiff := eniConfigurationDiff{PreviousValue: &filteredConfig, UpdatedValue: &filteredConfig, ChangeType: update}
+		jsonFilteredConfigDiff, err := json.Marshal(filteredConfigDiff)
+		if err != nil {
+			print("Could not marshal test struct")
+		}
+
+		filteredConfigEvent.ConfigurationItemDiff = configurationItemDiff{
+			ChangedProperties: map[string]json.RawMessage{
+				"Configuration":          json.RawMessage(jsonFilteredConfigDiff),
+				"Configuration.NotTag.1": json.RawMessage("{\"previousValue\": null, \"updatedValue\": {\"key\": \"info\", \"value\": \"I added a new tag\"}}"),
+			},
+		}
+
+		updateOutput, reject, err := transformer.Update(filteredConfigEvent)
+		assert.Equal(t, true, reject)
+		assert.Nil(t, err)
+		assert.True(t, updateOutput.Changes == nil, "Expected empty changes due to filtering")
 	})
 
 	t.Run("eni-deleted", func(t *testing.T) {
