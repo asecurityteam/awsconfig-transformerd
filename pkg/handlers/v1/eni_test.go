@@ -132,7 +132,7 @@ func TestFilterENI(t *testing.T) {
 		assert.True(t, createOutput.Changes == nil, "Expected empty changes due to filtering")
 	})
 
-	t.Run("eni-created", func(t *testing.T) {
+	t.Run("eni-created-with-tags", func(t *testing.T) {
 		filteredConfig.RequesterManaged = true
 		filteredConfigEvent.ConfigurationItem.Configuration = json.RawMessage(jsonFilteredConfig)
 		filteredConfigEvent.ConfigurationItem.Tags = map[string]string{
@@ -146,6 +146,7 @@ func TestFilterENI(t *testing.T) {
 	})
 
 	t.Run("eni-deleted", func(t *testing.T) {
+		filteredConfig.RequesterManaged = false
 		// Because deleting looks at the PreviousValue for filtering, we need some more set up
 		filteredConfigDiff := eniConfigurationDiff{PreviousValue: &filteredConfig}
 		jsonFilteredConfigDiff, err := json.Marshal(filteredConfigDiff)
