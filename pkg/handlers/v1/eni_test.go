@@ -226,6 +226,13 @@ func TestErrorENI(t *testing.T) {
 	// We would like this to pass evaluation so we can instead test unmarshaling errors for configs
 	malformedConfigEvent.ConfigurationItem.AWSAccountID = "123456789"
 
+	t.Run("malformed-json-update-event", func(t *testing.T) {
+		malformedConfigEvent.ConfigurationItem.Configuration = []byte("{ bad: json }")
+		_, _, err := transformer.Update(malformedConfigEvent)
+		assert.NotNil(t, err)
+		assert.Contains(t, err.Error(), "invalid character")
+	})
+
 	malformedConfiguration := json.RawMessage(`{"requesterManaged": "sure"}`)
 
 	t.Run("malformed-create-config", func(t *testing.T) {
