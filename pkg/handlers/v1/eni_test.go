@@ -124,14 +124,53 @@ func TestFilterENI(t *testing.T) {
 	transformer := eniTransformer{}
 
 	t.Run("eni-created", func(t *testing.T) {
+		filteredConfig.RequesterManaged = false
 		filteredConfigEvent.ConfigurationItem.Configuration = json.RawMessage(jsonFilteredConfig)
 
-		createOutput, err := transformer.Create(filteredConfigEvent)
+		createOutput, reject, err := transformer.Create(filteredConfigEvent)
+		assert.Equal(t, true, reject)
 		assert.Nil(t, err)
 		assert.True(t, createOutput.Changes == nil, "Expected empty changes due to filtering")
 	})
 
+	t.Run("eni-created-with-tags", func(t *testing.T) {
+		filteredConfig.RequesterManaged = true
+		filteredConfigEvent.ConfigurationItem.Configuration = json.RawMessage(jsonFilteredConfig)
+		filteredConfigEvent.ConfigurationItemDiff = configurationItemDiff{
+			ChangedProperties: map[string]json.RawMessage{
+				"Configuration.NotTag.1": json.RawMessage("{\"previousValue\": null, \"updatedValue\": {\"key\": \"info\", \"value\": \"I added a new tag\"}}"),
+			},
+		}
+
+		createOutput, reject, err := transformer.Create(filteredConfigEvent)
+		assert.Equal(t, true, reject)
+		assert.Nil(t, err)
+		assert.True(t, createOutput.Changes == nil, "Expected empty changes due to filtering")
+	})
+
+	t.Run("eni-updated", func(t *testing.T) {
+		filteredConfig.RequesterManaged = true
+		filteredConfigDiff := eniConfigurationDiff{PreviousValue: &filteredConfig, UpdatedValue: &filteredConfig, ChangeType: update}
+		jsonFilteredConfigDiff, err := json.Marshal(filteredConfigDiff)
+		if err != nil {
+			print("Could not marshal test struct")
+		}
+
+		filteredConfigEvent.ConfigurationItemDiff = configurationItemDiff{
+			ChangedProperties: map[string]json.RawMessage{
+				"Configuration":          json.RawMessage(jsonFilteredConfigDiff),
+				"Configuration.NotTag.1": json.RawMessage("{\"previousValue\": null, \"updatedValue\": {\"key\": \"info\", \"value\": \"I added a new tag\"}}"),
+			},
+		}
+
+		updateOutput, reject, err := transformer.Update(filteredConfigEvent)
+		assert.Equal(t, true, reject)
+		assert.Nil(t, err)
+		assert.True(t, updateOutput.Changes == nil, "Expected empty changes due to filtering")
+	})
+
 	t.Run("eni-deleted", func(t *testing.T) {
+		filteredConfig.RequesterManaged = false
 		// Because deleting looks at the PreviousValue for filtering, we need some more set up
 		filteredConfigDiff := eniConfigurationDiff{PreviousValue: &filteredConfig}
 		jsonFilteredConfigDiff, err := json.Marshal(filteredConfigDiff)
@@ -145,7 +184,7 @@ func TestFilterENI(t *testing.T) {
 			},
 		}
 
-		deleteOutput, err := transformer.Delete(filteredConfigEvent)
+		deleteOutput, _, err := transformer.Delete(filteredConfigEvent)
 		assert.Nil(t, err)
 		assert.True(t, deleteOutput.Changes == nil, "Expected empty changes due to filtering")
 	})
@@ -167,19 +206,19 @@ func TestErrorENI(t *testing.T) {
 	transformer := eniTransformer{}
 
 	t.Run("malformed-create-event", func(t *testing.T) {
-		_, err := transformer.Create(malformedConfigEvent)
+		_, _, err := transformer.Create(malformedConfigEvent)
 		assert.NotNil(t, err)
 		assert.Equal(t, err, ErrMissingValue{Field: "AWSAccountID"})
 	})
 
 	t.Run("malformed-update-event", func(t *testing.T) {
-		_, err := transformer.Update(malformedConfigEvent)
+		_, _, err := transformer.Update(malformedConfigEvent)
 		assert.NotNil(t, err)
 		assert.Equal(t, err, ErrMissingValue{Field: "AWSAccountID"})
 	})
 
 	t.Run("malformed-delete-event", func(t *testing.T) {
-		_, err := transformer.Delete(malformedConfigEvent)
+		_, _, err := transformer.Delete(malformedConfigEvent)
 		assert.NotNil(t, err)
 		assert.Equal(t, err, ErrMissingValue{Field: "AWSAccountID"})
 	})
@@ -187,11 +226,18 @@ func TestErrorENI(t *testing.T) {
 	// We would like this to pass evaluation so we can instead test unmarshaling errors for configs
 	malformedConfigEvent.ConfigurationItem.AWSAccountID = "123456789"
 
+	t.Run("malformed-json-update-event", func(t *testing.T) {
+		malformedConfigEvent.ConfigurationItem.Configuration = []byte("{ bad: json }")
+		_, _, err := transformer.Update(malformedConfigEvent)
+		assert.NotNil(t, err)
+		assert.Contains(t, err.Error(), "invalid character")
+	})
+
 	malformedConfiguration := json.RawMessage(`{"requesterManaged": "sure"}`)
 
 	t.Run("malformed-create-config", func(t *testing.T) {
 		malformedConfigEvent.ConfigurationItem.Configuration = malformedConfiguration
-		_, err := transformer.Create(malformedConfigEvent)
+		_, _, err := transformer.Create(malformedConfigEvent)
 		assert.NotNil(t, err)
 		expected := &json.UnmarshalTypeError{Value: "string", Offset: 27, Type: reflect.TypeOf(false), Struct: "eniConfiguration", Field: "requesterManaged"}
 		assert.Equal(t, expected, err)
@@ -203,7 +249,7 @@ func TestErrorENI(t *testing.T) {
 				"Configuration": json.RawMessage(`{"previousValue": "bad"}`),
 			},
 		}
-		_, err := transformer.Delete(malformedConfigEvent)
+		_, _, err := transformer.Delete(malformedConfigEvent)
 		assert.NotNil(t, err)
 		expected := &json.UnmarshalTypeError{Value: "string", Offset: 23, Type: reflect.TypeOf(eniConfiguration{}), Struct: "eniConfigurationDiff", Field: "previousValue"}
 		assert.Equal(t, expected, err)

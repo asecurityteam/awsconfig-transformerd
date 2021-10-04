@@ -28,48 +28,48 @@ func extractELBNetworkInfo(config *elbConfiguration) Change {
 
 type elbTransformer struct{}
 
-func (t elbTransformer) Create(event awsConfigEvent) (Output, error) {
+func (t elbTransformer) Create(event awsConfigEvent) (Output, bool, error) {
 	output, err := getBaseOutput(event.ConfigurationItem)
 	if err != nil {
-		return Output{}, err
+		return Output{}, false, err
 	}
 
 	// if a resource is created for the first time, there is no diff.
 	// just read the configuration
 	var config elbConfiguration
 	if err := json.Unmarshal(event.ConfigurationItem.Configuration, &config); err != nil {
-		return Output{}, err
+		return Output{}, false, err
 	}
 	change := extractELBNetworkInfo(&config)
 	change.ChangeType = added
 	output.Changes = append(output.Changes, change)
-	return output, nil
+	return output, false, nil
 }
 
-func (t elbTransformer) Update(event awsConfigEvent) (Output, error) {
+func (t elbTransformer) Update(event awsConfigEvent) (Output, bool, error) {
 	// DNS names for ELBs cannot be changed, so the update case is a largely a no-op.
 	output, err := getBaseOutput(event.ConfigurationItem)
 	if err != nil {
-		return Output{}, err
+		return Output{}, false, err
 	}
-	return output, nil
+	return output, false, nil
 }
 
-func (t elbTransformer) Delete(event awsConfigEvent) (Output, error) {
+func (t elbTransformer) Delete(event awsConfigEvent) (Output, bool, error) {
 	output, err := getBaseOutput(event.ConfigurationItem)
 	if err != nil {
-		return Output{}, err
+		return Output{}, false, err
 	}
 	// if a resource is deleted, the tags are no longer present in the base object.
 	// we must fetch them from the previous configuration.
 	changeProps := event.ConfigurationItemDiff.ChangedProperties
 	configDiffRaw, ok := changeProps["Configuration"]
 	if !ok {
-		return Output{}, ErrMissingValue{Field: "ChangedProperties.Configuration"}
+		return Output{}, false, ErrMissingValue{Field: "ChangedProperties.Configuration"}
 	}
 	var configDiff elbConfigurationDiff
 	if err := json.Unmarshal(configDiffRaw, &configDiff); err != nil {
-		return Output{}, err
+		return Output{}, false, err
 	}
 
 	// fetch network information from the previous configuration
@@ -81,15 +81,15 @@ func (t elbTransformer) Delete(event awsConfigEvent) (Output, error) {
 	// we must fetch them from the previous configuration.
 	supplementaryConfigDiffRaw, ok := changeProps["SupplementaryConfiguration.Tags"]
 	if !ok {
-		return output, nil
+		return output, false, nil
 	}
 	var supplementaryConfigDiff supplementaryConfigurationDiff
 	if err := json.Unmarshal(supplementaryConfigDiffRaw, &supplementaryConfigDiff); err != nil {
-		return Output{}, err
+		return Output{}, false, err
 	}
 
 	for _, tag := range supplementaryConfigDiff.PreviousValue {
 		output.Tags[tag.Key] = tag.Value
 	}
-	return output, nil
+	return output, false, nil
 }
