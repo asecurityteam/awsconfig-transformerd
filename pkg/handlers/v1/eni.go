@@ -9,10 +9,10 @@ import (
 const elbRequester = "amazon-elb"
 
 type eniConfiguration struct {
-	Description        string      `json:"description"`
-	PrivateIPAddresses []privateIP `json:"privateIpAddresses"`
-	RequesterID        string      `json:"requesterId"`
-	RequesterManaged   bool        `json:"requesterManaged"`
+	Description        string             `json:"description"`
+	PrivateIPAddresses []PrivateIPAddress `json:"privateIpAddresses"`
+	RequesterID        string             `json:"requesterId"`
+	RequesterManaged   bool               `json:"requesterManaged"`
 }
 
 type eniConfigurationDiff struct {
@@ -21,8 +21,21 @@ type eniConfigurationDiff struct {
 	ChangeType    string            `json:"changeType"`
 }
 
-type privateIP struct {
-	PrivateIPAddress string `json:"PrivateIpAddress"`
+type PrivateIPBlockDiff struct {
+	PreviousValue *PrivateIPAddress `json:"previousValue"`
+	UpdatedValue  *PrivateIPAddress `json:"updatedValue"`
+	ChangeType    string            `json:"changeType"`
+}
+
+type PrivateIPAddress struct {
+	PrivateIPAddress string `json:"privateIpAddress"`
+	PrivateDNSName   string `json:"privateDnsName"`
+	Primary          bool   `json:"primary"`
+	Association      struct {
+		PublicIP      string `json:"publicIp"`
+		PublicDNSName string `json:"publicDnsName"`
+		IPOwnerID     string `json:"ipOwnerId"`
+	} `json:"association"`
 }
 
 type eniTransformer struct{}
@@ -69,7 +82,38 @@ func (t eniTransformer) Update(event awsConfigEvent) (Output, bool, error) {
 		return Output{}, false, err
 	}
 
-	return output, filter(config), nil
+	//return output, filter(config), nil
+
+	addedChange := Change{ChangeType: added}
+	deletedChange := Change{ChangeType: deleted}
+	// If an update was detected, check to see if any changes to the NetworkInterfaces occurred
+	for k, v := range event.ConfigurationItemDiff.ChangedProperties {
+		if !strings.HasPrefix(k, "Configuration.PrivateIpAddresses.") {
+			continue
+		}
+		var diff PrivateIPBlockDiff
+		if err := json.Unmarshal(v, &diff); err != nil {
+			return Output{}, false, err
+		}
+		ipBlock := diff.UpdatedValue
+		changes := &addedChange
+		if diff.ChangeType == delete {
+			ipBlock = diff.PreviousValue
+			changes = &deletedChange
+		}
+		extractIPBlock(ipBlock, changes)
+		extractRelatedResources(&config, changes)
+	}
+	// We need to compute the symmetric difference of the added changes and the removed changes
+	// i.e. remove entries that show up as both added and removed
+	symmetricDifference(&addedChange, &deletedChange)
+	if len(addedChange.PrivateIPAddresses) > 0 || len(addedChange.PublicIPAddresses) > 0 || len(addedChange.Hostnames) > 0 {
+		output.Changes = append(output.Changes, addedChange)
+	}
+	if len(deletedChange.PrivateIPAddresses) > 0 || len(deletedChange.PublicIPAddresses) > 0 || len(deletedChange.Hostnames) > 0 {
+		output.Changes = append(output.Changes, deletedChange)
+	}
+	return output, false, nil
 }
 
 func (t eniTransformer) Delete(event awsConfigEvent) (Output, bool, error) {
@@ -101,15 +145,26 @@ func (t eniTransformer) Delete(event awsConfigEvent) (Output, bool, error) {
 func extractEniInfo(config *eniConfiguration) Change {
 	change := Change{}
 
-	// All our sample data only has one privateIp, but it is possible to have multiple
-	privateIPs := []string{}
 	for _, privateIP := range config.PrivateIPAddresses {
-		privateIPs = append(privateIPs, privateIP.PrivateIPAddress)
+		extractIPBlock(&privateIP, &change)
 	}
-	change.PrivateIPAddresses = append(change.PrivateIPAddresses, privateIPs...)
 
-	pieces := strings.Split(config.Description, " ")
-	change.RelatedResources = append(change.RelatedResources, pieces[len(pieces)-1])
+	extractRelatedResources(config, &change)
 
 	return change
+}
+
+func extractRelatedResources(config *eniConfiguration, change *Change) {
+	pieces := strings.Split(config.Description, " ")
+	change.RelatedResources = append(change.RelatedResources, pieces[len(pieces)-1])
+}
+
+func extractIPBlock(privateIpBlock *PrivateIPAddress, change *Change) {
+	change.PrivateIPAddresses = append(change.PrivateIPAddresses, privateIpBlock.PrivateIPAddress)
+	if privateIpBlock.Association.PublicIP != "" {
+		change.PublicIPAddresses = append(change.PublicIPAddresses, privateIpBlock.Association.PublicIP)
+	}
+	if privateIpBlock.Association.PublicDNSName != "" {
+		change.Hostnames = append(change.Hostnames, privateIpBlock.Association.PublicDNSName)
+	}
 }
