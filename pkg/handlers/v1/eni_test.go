@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"reflect"
@@ -23,14 +24,14 @@ func TestTransformENI(t *testing.T) {
 			Name:      "eni-created",
 			InputFile: "eni.1.create.json",
 			ExpectedOutput: Output{
-				AccountID:    "123456789",
+				AccountID:    "123456789123",
 				ChangeTime:   "2020-08-21T12:00:00.000Z",
 				Region:       "ap-southeast-2",
 				ResourceType: "AWS::EC2::NetworkInterface",
 				ARN:          "arn:aws:ec2:ap-southeast-2:123456789:network-interface/eni-abcdefghi1234567",
 				Changes: []Change{
 					{
-						PrivateIPAddresses: []string{"10.111.222.333"},
+						PrivateIPAddresses: []string{"10.111.222.33"},
 						RelatedResources:   []string{"micros-sec-example-ELB-AAAAAA11111"},
 						ChangeType:         added,
 					},
@@ -41,11 +42,11 @@ func TestTransformENI(t *testing.T) {
 			Name:      "eni-createed-with-public-ip",
 			InputFile: "eni.2.create.json",
 			ExpectedOutput: Output{
-				AccountID:    "12345678910",
+				AccountID:    "000000000000",
 				ChangeTime:   "2021-11-01T03:09:57.320Z",
 				Region:       "eu-central-1",
 				ResourceType: "AWS::EC2::NetworkInterface",
-				ARN:          "arn:aws:ec2:eu-central-1:12345678910:network-interface/eni-bbbbbbbb9999999",
+				ARN:          "arn:aws:ec2:eu-central-1:000000000000:network-interface/eni-bbbbbbbb9999999",
 				Changes: []Change{
 					{
 						PublicIPAddresses:  []string{"18.111.200.30"},
@@ -61,27 +62,27 @@ func TestTransformENI(t *testing.T) {
 			Name:      "eni-updated",
 			InputFile: "eni.1.update.json",
 			ExpectedOutput: Output{
-				AccountID:    "12345678910",
+				AccountID:    "112233445566",
 				ChangeTime:   "2020-08-21T12:31:00.000Z",
 				Region:       "eu-central-1",
 				ResourceType: "AWS::EC2::NetworkInterface",
-				ARN:          "arn:aws:ec2:eu-central-1:12345678910:network-interface/eni-eeeeeee8888888",
+				ARN:          "arn:aws:ec2:eu-central-1:112233445566:network-interface/eni-eeeeeee8888888",
 			},
 		},
 		{
 			Name:      "eni-updated-with-public-ip",
 			InputFile: "eni.2.update.json",
 			ExpectedOutput: Output{
-				AccountID:    "12345678910",
+				AccountID:    "123123123123",
 				ChangeTime:   "2021-11-01T12:56:57.500Z",
 				Region:       "us-west-1",
 				ResourceType: "AWS::EC2::NetworkInterface",
-				ARN:          "arn:aws:ec2:us-west-1:12345678910:network-interface/eni-123456789",
+				ARN:          "arn:aws:ec2:us-west-1:123123123123:network-interface/eni-123456789",
 				Changes: []Change{
 					{
-						PublicIPAddresses:  []string{"54.111.665.212"},
+						PublicIPAddresses:  []string{"54.111.25.212"},
 						PrivateIPAddresses: []string{},
-						Hostnames:          []string{"ec2-54-111-665-212.us-west-1.compute.amazonaws.com"},
+						Hostnames:          []string{"ec2-54-111-25-212.us-west-1.compute.amazonaws.com"},
 						RelatedResources:   []string{"micros-sec-example-ELB-BBBBBBBB222222"},
 						ChangeType:         added,
 					},
@@ -92,14 +93,14 @@ func TestTransformENI(t *testing.T) {
 			Name:      "eni-deleted",
 			InputFile: "eni.1.delete.json",
 			ExpectedOutput: Output{
-				AccountID:    "12345678910",
+				AccountID:    "098765432109",
 				ChangeTime:   "2020-08-21T13:02:00.000Z",
 				Region:       "us-east-1",
 				ResourceType: "AWS::EC2::NetworkInterface",
-				ARN:          "arn:aws:ec2:us-east-1:12345678910:network-interface/eni-hhhhhhh888888",
+				ARN:          "arn:aws:ec2:us-east-1:098765432109:network-interface/eni-hhhhhhh888888",
 				Changes: []Change{
 					{
-						PrivateIPAddresses: []string{"10.111.222.333"},
+						PrivateIPAddresses: []string{"10.11.22.33"},
 						RelatedResources:   []string{"app/marketp-ALB-eeeeeee5555555/ffffffff66666666"},
 						ChangeType:         deleted,
 					},
@@ -110,11 +111,11 @@ func TestTransformENI(t *testing.T) {
 			Name:      "eni-deleted-with-public-ip",
 			InputFile: "eni.2.delete.json",
 			ExpectedOutput: Output{
-				AccountID:    "12345678910",
+				AccountID:    "123456789123",
 				ChangeTime:   "2021-11-05T00:00:07.736Z",
 				Region:       "eu-central-1",
 				ResourceType: "AWS::EC2::NetworkInterface",
-				ARN:          "arn:aws:ec2:eu-central-1:12345678910:network-interface/eni-abcd1234",
+				ARN:          "arn:aws:ec2:eu-central-1:123456789123:network-interface/eni-abcd1234",
 				Changes: []Change{
 					{
 						PublicIPAddresses:  []string{"18.123.152.102"},
@@ -146,6 +147,9 @@ func TestTransformENI(t *testing.T) {
 			} else {
 				require.Nil(t, err)
 			}
+			b, err := json.Marshal(output)
+			fmt.Print("OUTPUT")
+			fmt.Println(string(b))
 
 			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
 			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
