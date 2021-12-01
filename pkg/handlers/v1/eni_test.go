@@ -89,6 +89,26 @@ func TestTransformENI(t *testing.T) {
 			},
 		},
 		{
+			Name:      "eni-updated-with-deleted-private-ip",
+			InputFile: "eni.3.update.json",
+			ExpectedOutput: Output{
+				AccountID:    "010203040506",
+				ChangeTime:   "2021-11-01T12:56:57.500Z",
+				Region:       "us-west-1",
+				ResourceType: "AWS::EC2::NetworkInterface",
+				ARN:          "arn:aws:ec2:us-west-1:010203040506:network-interface/eni-123456789",
+				Changes: []Change{
+					{
+						PublicIPAddresses:  []string{},
+						PrivateIPAddresses: []string{"10.23.24.25"},
+						Hostnames:          []string{},
+						RelatedResources:   []string{"micros-sec-example-ELB-AAAAAAAABBBBBBB111111"},
+						ChangeType:         deleted,
+					},
+				},
+			},
+		},
+		{
 			Name:      "eni-deleted",
 			InputFile: "eni.1.delete.json",
 			ExpectedOutput: Output{
@@ -315,4 +335,31 @@ func TestErrorENI(t *testing.T) {
 		assert.Equal(t, expected, err)
 	})
 
+	//Edge case where generic config event fields look fine, but IP Block is malformed
+	t.Run("malformed-private-ip-json-block-update-event", func(t *testing.T) {
+		emptyIPBlockConfigurationItem := configurationItem{
+			Configuration:                json.RawMessage(`{"description": "FILLER","privateIpAddresses": [],"requesterId": "amazon-elb","requesterManaged": true}`),
+			ConfigurationItemCaptureTime: "2021-11-02T12:56:57.562Z",
+			AWSAccountID:                 "111111111111",
+			ResourceType:                 "AWS::EC2::NetworkInterface",
+			ARN:                          "arn:aws:ec2:us-west-1:752631980301:network-interface/eni-0f0a311411ae5166d",
+			AWSRegion:                    "us-west-1",
+		}
+
+		okayConfigurationItemDiff := configurationItemDiff{
+			ChangedProperties: map[string]json.RawMessage{
+				"Configuration.PrivateIpAddresses.0": json.RawMessage(`{"previousValue": "bad"}`),
+			},
+		}
+
+		malformedEvent := awsConfigEvent{
+			ConfigurationItemDiff: okayConfigurationItemDiff,
+			ConfigurationItem:     emptyIPBlockConfigurationItem,
+		}
+
+		_, _, err := transformer.Update(malformedEvent)
+		assert.NotNil(t, err)
+		expected := &json.UnmarshalTypeError{Value: "string", Type: reflect.TypeOf(privateIPAddress{}), Offset: 23, Struct: "privateIPBlockDiff", Field: "previousValue"}
+		assert.Equal(t, expected, err)
+	})
 }

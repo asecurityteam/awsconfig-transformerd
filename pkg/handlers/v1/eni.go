@@ -10,7 +10,7 @@ const elbRequester = "amazon-elb"
 
 type eniConfiguration struct {
 	Description        string             `json:"description"`
-	PrivateIPAddresses []PrivateIPAddress `json:"privateIpAddresses"`
+	PrivateIPAddresses []privateIPAddress `json:"privateIpAddresses"`
 	RequesterID        string             `json:"requesterId"`
 	RequesterManaged   bool               `json:"requesterManaged"`
 }
@@ -21,13 +21,13 @@ type eniConfigurationDiff struct {
 	ChangeType    string            `json:"changeType"`
 }
 
-type PrivateIPBlockDiff struct {
-	PreviousValue *PrivateIPAddress `json:"previousValue"`
-	UpdatedValue  *PrivateIPAddress `json:"updatedValue"`
+type privateIPBlockDiff struct {
+	PreviousValue *privateIPAddress `json:"previousValue"`
+	UpdatedValue  *privateIPAddress `json:"updatedValue"`
 	ChangeType    string            `json:"changeType"`
 }
 
-type PrivateIPAddress struct {
+type privateIPAddress struct {
 	PrivateIPAddress string `json:"privateIpAddress"`
 	PrivateDNSName   string `json:"privateDnsName"`
 	Primary          bool   `json:"primary"`
@@ -91,7 +91,7 @@ func (t eniTransformer) Update(event awsConfigEvent) (Output, bool, error) {
 		if !strings.HasPrefix(k, "Configuration.PrivateIpAddresses.") {
 			continue
 		}
-		var diff PrivateIPBlockDiff
+		var diff privateIPBlockDiff
 		if err := json.Unmarshal(v, &diff); err != nil {
 			return Output{}, false, err
 		}
@@ -159,7 +159,7 @@ func extractRelatedResources(config *eniConfiguration, change *Change) {
 	change.RelatedResources = append(change.RelatedResources, pieces[len(pieces)-1])
 }
 
-func extractIPBlock(privateIpBlock *PrivateIPAddress, change *Change) {
+func extractIPBlock(privateIpBlock *privateIPAddress, change *Change) {
 	change.PrivateIPAddresses = append(change.PrivateIPAddresses, privateIpBlock.PrivateIPAddress)
 	if privateIpBlock.Association.PublicIP != "" {
 		change.PublicIPAddresses = append(change.PublicIPAddresses, privateIpBlock.Association.PublicIP)
