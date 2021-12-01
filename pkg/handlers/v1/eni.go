@@ -145,8 +145,8 @@ func (t eniTransformer) Delete(event awsConfigEvent) (Output, bool, error) {
 func extractEniInfo(config *eniConfiguration) Change {
 	change := Change{}
 
-	for _, privateIP := range config.PrivateIPAddresses {
-		extractIPBlock(&privateIP, &change)
+	for i := range config.PrivateIPAddresses {
+		extractIPBlock(&config.PrivateIPAddresses[i], &change)
 	}
 
 	extractRelatedResources(config, &change)
@@ -159,12 +159,12 @@ func extractRelatedResources(config *eniConfiguration, change *Change) {
 	change.RelatedResources = append(change.RelatedResources, pieces[len(pieces)-1])
 }
 
-func extractIPBlock(privateIpBlock *privateIPAddress, change *Change) {
-	change.PrivateIPAddresses = append(change.PrivateIPAddresses, privateIpBlock.PrivateIPAddress)
-	if privateIpBlock.Association.PublicIP != "" {
-		change.PublicIPAddresses = append(change.PublicIPAddresses, privateIpBlock.Association.PublicIP)
+func extractIPBlock(privateIPBlock *privateIPAddress, change *Change) {
+	change.PrivateIPAddresses = append(change.PrivateIPAddresses, privateIPBlock.PrivateIPAddress)
+	if privateIPBlock.Association.PublicIP != "" {
+		change.PublicIPAddresses = append(change.PublicIPAddresses, privateIPBlock.Association.PublicIP)
 	}
-	if privateIpBlock.Association.PublicDNSName != "" {
-		change.Hostnames = append(change.Hostnames, privateIpBlock.Association.PublicDNSName)
+	if privateIPBlock.Association.PublicDNSName != "" {
+		change.Hostnames = append(change.Hostnames, privateIPBlock.Association.PublicDNSName)
 	}
 }
