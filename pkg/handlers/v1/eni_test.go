@@ -244,7 +244,7 @@ func TestFilterENI(t *testing.T) {
 		}
 
 		updateOutput, reject, err := transformer.Update(filteredConfigEvent)
-		assert.Equal(t, false, reject)
+		assert.Equal(t, true, reject)
 		assert.Nil(t, err)
 		assert.True(t, updateOutput.Changes == nil, "Expected empty changes due to filtering")
 	})
