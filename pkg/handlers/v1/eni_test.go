@@ -3,7 +3,6 @@ package v1
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"reflect"
@@ -147,9 +146,6 @@ func TestTransformENI(t *testing.T) {
 			} else {
 				require.Nil(t, err)
 			}
-			b, err := json.Marshal(output)
-			fmt.Print("OUTPUT")
-			fmt.Println(string(b))
 
 			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
 			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
