@@ -82,7 +82,9 @@ func (t eniTransformer) Update(event awsConfigEvent) (Output, bool, error) {
 		return Output{}, false, err
 	}
 
-	//return output, filter(config), nil
+	if filter(config) {
+		return output, true, nil
+	}
 
 	addedChange := Change{ChangeType: added}
 	deletedChange := Change{ChangeType: deleted}
