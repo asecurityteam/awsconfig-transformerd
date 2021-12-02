@@ -21,16 +21,16 @@ func TestTransformENI(t *testing.T) {
 	}{
 		{
 			Name:      "eni-created",
-			InputFile: "eni.create.json",
+			InputFile: "eni.1.create.json",
 			ExpectedOutput: Output{
-				AccountID:    "123456789",
+				AccountID:    "123456789123",
 				ChangeTime:   "2020-08-21T12:00:00.000Z",
 				Region:       "ap-southeast-2",
 				ResourceType: "AWS::EC2::NetworkInterface",
 				ARN:          "arn:aws:ec2:ap-southeast-2:123456789:network-interface/eni-abcdefghi1234567",
 				Changes: []Change{
 					{
-						PrivateIPAddresses: []string{"10.111.222.333"},
+						PrivateIPAddresses: []string{"10.111.222.33"},
 						RelatedResources:   []string{"micros-sec-example-ELB-AAAAAA11111"},
 						ChangeType:         added,
 					},
@@ -38,29 +38,109 @@ func TestTransformENI(t *testing.T) {
 			},
 		},
 		{
-			Name:      "eni-updated",
-			InputFile: "eni.update.json",
+			Name:      "eni-createed-with-public-ip",
+			InputFile: "eni.2.create.json",
 			ExpectedOutput: Output{
-				AccountID:    "12345678910",
+				AccountID:    "000000000000",
+				ChangeTime:   "2021-11-01T03:09:57.320Z",
+				Region:       "eu-central-1",
+				ResourceType: "AWS::EC2::NetworkInterface",
+				ARN:          "arn:aws:ec2:eu-central-1:000000000000:network-interface/eni-bbbbbbbb9999999",
+				Changes: []Change{
+					{
+						PublicIPAddresses:  []string{"18.111.200.30"},
+						PrivateIPAddresses: []string{"10.111.222.138"},
+						Hostnames:          []string{"ec2-18-111-200-30.eu-central-1.compute.amazonaws.com"},
+						RelatedResources:   []string{"app/ALB-1212412/12412413"},
+						ChangeType:         added,
+					},
+				},
+			},
+		},
+		{
+			Name:      "eni-updated",
+			InputFile: "eni.1.update.json",
+			ExpectedOutput: Output{
+				AccountID:    "112233445566",
 				ChangeTime:   "2020-08-21T12:31:00.000Z",
 				Region:       "eu-central-1",
 				ResourceType: "AWS::EC2::NetworkInterface",
-				ARN:          "arn:aws:ec2:eu-central-1:12345678910:network-interface/eni-eeeeeee8888888",
+				ARN:          "arn:aws:ec2:eu-central-1:112233445566:network-interface/eni-eeeeeee8888888",
+			},
+		},
+		{
+			Name:      "eni-updated-with-public-ip",
+			InputFile: "eni.2.update.json",
+			ExpectedOutput: Output{
+				AccountID:    "123123123123",
+				ChangeTime:   "2021-11-01T12:56:57.500Z",
+				Region:       "us-west-1",
+				ResourceType: "AWS::EC2::NetworkInterface",
+				ARN:          "arn:aws:ec2:us-west-1:123123123123:network-interface/eni-123456789",
+				Changes: []Change{
+					{
+						PublicIPAddresses:  []string{"54.111.25.212"},
+						PrivateIPAddresses: []string{},
+						Hostnames:          []string{"ec2-54-111-25-212.us-west-1.compute.amazonaws.com"},
+						RelatedResources:   []string{"micros-sec-example-ELB-BBBBBBBB222222"},
+						ChangeType:         added,
+					},
+				},
+			},
+		},
+		{
+			Name:      "eni-updated-with-deleted-private-ip",
+			InputFile: "eni.3.update.json",
+			ExpectedOutput: Output{
+				AccountID:    "010203040506",
+				ChangeTime:   "2021-11-01T12:56:57.500Z",
+				Region:       "us-west-1",
+				ResourceType: "AWS::EC2::NetworkInterface",
+				ARN:          "arn:aws:ec2:us-west-1:010203040506:network-interface/eni-123456789",
+				Changes: []Change{
+					{
+						PublicIPAddresses:  []string{},
+						PrivateIPAddresses: []string{"10.23.24.25"},
+						Hostnames:          []string{},
+						RelatedResources:   []string{"micros-sec-example-ELB-AAAAAAAABBBBBBB111111"},
+						ChangeType:         deleted,
+					},
+				},
 			},
 		},
 		{
 			Name:      "eni-deleted",
-			InputFile: "eni.delete.json",
+			InputFile: "eni.1.delete.json",
 			ExpectedOutput: Output{
-				AccountID:    "12345678910",
+				AccountID:    "098765432109",
 				ChangeTime:   "2020-08-21T13:02:00.000Z",
 				Region:       "us-east-1",
 				ResourceType: "AWS::EC2::NetworkInterface",
-				ARN:          "arn:aws:ec2:us-east-1:12345678910:network-interface/eni-hhhhhhh888888",
+				ARN:          "arn:aws:ec2:us-east-1:098765432109:network-interface/eni-hhhhhhh888888",
 				Changes: []Change{
 					{
-						PrivateIPAddresses: []string{"10.111.222.333"},
+						PrivateIPAddresses: []string{"10.11.22.33"},
 						RelatedResources:   []string{"app/marketp-ALB-eeeeeee5555555/ffffffff66666666"},
+						ChangeType:         deleted,
+					},
+				},
+			},
+		},
+		{
+			Name:      "eni-deleted-with-public-ip",
+			InputFile: "eni.2.delete.json",
+			ExpectedOutput: Output{
+				AccountID:    "123456789123",
+				ChangeTime:   "2021-11-05T00:00:07.736Z",
+				Region:       "eu-central-1",
+				ResourceType: "AWS::EC2::NetworkInterface",
+				ARN:          "arn:aws:ec2:eu-central-1:123456789123:network-interface/eni-abcd1234",
+				Changes: []Change{
+					{
+						PublicIPAddresses:  []string{"18.123.152.102"},
+						PrivateIPAddresses: []string{"10.13.56.162"},
+						Hostnames:          []string{"ec2-18-123-152-102.eu-central-1.compute.amazonaws.com"},
+						RelatedResources:   []string{"app/marketp-ALB-fadg3t3t55555/gggggggg99999999"},
 						ChangeType:         deleted,
 					},
 				},
@@ -255,4 +335,31 @@ func TestErrorENI(t *testing.T) {
 		assert.Equal(t, expected, err)
 	})
 
+	//Edge case where generic config event fields look fine, but IP Block is malformed
+	t.Run("malformed-private-ip-json-block-update-event", func(t *testing.T) {
+		emptyIPBlockConfigurationItem := configurationItem{
+			Configuration:                json.RawMessage(`{"description": "FILLER","privateIpAddresses": [],"requesterId": "amazon-elb","requesterManaged": true}`),
+			ConfigurationItemCaptureTime: "2021-11-02T12:56:57.562Z",
+			AWSAccountID:                 "111111111111",
+			ResourceType:                 "AWS::EC2::NetworkInterface",
+			ARN:                          "arn:aws:ec2:us-west-1:752631980301:network-interface/eni-0f0a311411ae5166d",
+			AWSRegion:                    "us-west-1",
+		}
+
+		okayConfigurationItemDiff := configurationItemDiff{
+			ChangedProperties: map[string]json.RawMessage{
+				"Configuration.PrivateIpAddresses.0": json.RawMessage(`{"previousValue": "bad"}`),
+			},
+		}
+
+		malformedEvent := awsConfigEvent{
+			ConfigurationItemDiff: okayConfigurationItemDiff,
+			ConfigurationItem:     emptyIPBlockConfigurationItem,
+		}
+
+		_, _, err := transformer.Update(malformedEvent)
+		assert.NotNil(t, err)
+		expected := &json.UnmarshalTypeError{Value: "string", Type: reflect.TypeOf(privateIPAddress{}), Offset: 23, Struct: "privateIPBlockDiff", Field: "previousValue"}
+		assert.Equal(t, expected, err)
+	})
 }
