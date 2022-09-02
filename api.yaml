@@ -6,7 +6,7 @@ x-runtime:
     level: "INFO"
     output: "STDOUT"
   stats:
-    output: "DATADOG"
+    output: "NULL"
     datadog:
       address: "statsd:8126"
       flushinterval: "10s"
