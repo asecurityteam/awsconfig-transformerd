@@ -317,6 +317,21 @@ func TestTransformSubnet(t *testing.T) {
 			ExpectError: false,
 		},
 		{
+			Name:      "subnet-updated",
+			InputFile: "subnet.update.json",
+			ExpectedOutput: Output{
+				AccountID:    "123456789012",
+				ChangeTime:   "2022-09-01T01:05:16.232Z",
+				Region:       "us-west-2",
+				ResourceType: "AWS::EC2::Subnet",
+				ARN:          "arn:aws:ec2:us-west-2:123456789012:subnet/subnet-000aa0a000a00a0aa",
+				Tags: map[string]string{
+					"key1": "1",
+				},
+			},
+			ExpectError: false,
+		},
+		{
 			Name:      "subnet-deleted",
 			InputFile: "subnet.delete.json",
 			ExpectedOutput: Output{
