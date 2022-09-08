@@ -64,6 +64,9 @@ type Change struct {
 	// PrivateIPAddresses show changed private IP addresses
 	PrivateIPAddresses []string `json:"privateIpAddresses,omitempty"`
 
+	// CIDRBlock shows a changed CIDR block
+	CIDRBlock string `json:"cidrBlock"`
+
 	// Hostnames show changed public DNS names
 	Hostnames []string `json:"hostnames,omitempty"`
 
@@ -124,6 +127,8 @@ func (t *Transformer) Handle(ctx context.Context, input Input) (Output, error) {
 		output, reject, err = transformOutput(event, elbTransformer{})
 	case configservice.ResourceTypeAwsEc2NetworkInterface:
 		output, reject, err = transformOutput(event, eniTransformer{})
+	case configservice.ResourceTypeAwsEc2Subnet:
+		output, reject, err = transformOutput(event, subnetTransformer{})
 	default:
 		t.LogFn(ctx).Info(logs.UnsupportedResource{Resource: event.ConfigurationItem.ResourceType})
 	}
