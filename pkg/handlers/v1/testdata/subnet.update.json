@@ -1,0 +1,12 @@
+{
+    "Type": "Notification",
+    "MessageId": "0f3647b5-4018-5452-ad9e-1c3f479430d9",
+    "TopicArn": "arn:aws:sns:us-west-2:123456789012:aws_config_notifications",
+    "Subject": "[AWS Config:us-west-2] AWS::EC2::Subnet subnet-000aa0a000a00a0aa Updated in Account 123456789012",
+    "Message": "{\"configurationItemDiff\":{\"changedProperties\":{\"Configuration.AvailableIpAddressCount\":{\"previousValue\":1721,\"updatedValue\":1722,\"changeType\":\"UPDATE\"}},\"changeType\":\"UPDATE\"},\"configurationItem\":{\"relatedEvents\":[],\"relationships\":[{\"resourceId\":\"vpc-000aa0a000a00a0aa\",\"resourceName\":null,\"resourceType\":\"AWS::EC2::VPC\",\"name\":\"Is contained in Vpc\"}],\"configuration\":{\"availabilityZone\":\"us-west-2b\",\"availabilityZoneId\":\"usw2-az1\",\"availableIpAddressCount\":1722,\"cidrBlock\":\"10.106.64.0/20\",\"defaultForAz\":false,\"mapPublicIpOnLaunch\":false,\"mapCustomerOwnedIpOnLaunch\":false,\"customerOwnedIpv4Pool\":null,\"state\":\"available\",\"subnetId\":\"subnet-000aa0a000a00a0aa\",\"vpcId\":\"vpc-000aa0a000a00a0aa\",\"ownerId\":\"123456789012\",\"assignIpv6AddressOnCreation\":false,\"ipv6CidrBlockAssociationSet\":[],\"tags\":[{\"key\":\"key1\",\"value\":\"1\"}],\"subnetArn\":\"arn:aws:ec2:us-west-2:123456789012:subnet/subnet-000aa0a000a00a0aa\",\"outpostArn\":null},\"supplementaryConfiguration\":{},\"tags\":{\"key1\":\"1\"},\"configurationItemVersion\":\"1.3\",\"configurationItemCaptureTime\":\"2022-09-01T01:05:16.232Z\",\"configurationStateId\":1661994316232,\"awsAccountId\":\"123456789012\",\"configurationItemStatus\":\"OK\",\"resourceType\":\"AWS::EC2::Subnet\",\"resourceId\":\"subnet-000aa0a000a00a0aa\",\"resourceName\":null,\"ARN\":\"arn:aws:ec2:us-west-2:123456789012:subnet/subnet-000aa0a000a00a0aa\",\"awsRegion\":\"us-west-2\",\"availabilityZone\":\"us-west-2b\",\"configurationStateMd5Hash\":\"\",\"resourceCreationTime\":null},\"notificationCreationTime\":\"2022-09-01T01:05:16.536Z\",\"messageType\":\"ConfigurationItemChangeNotification\",\"recordVersion\":\"1.3\"}",
+    "Timestamp": "2022-09-01T01:05:16.834Z",
+    "SignatureVersion": "1",
+    "Signature": "signature",
+    "SigningCertURL": "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-example.pem",
+    "UnsubscribeURL": "https://sns.us-west-2.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-west-2:123456789012:aws_config_notifications:off-list"
+  }

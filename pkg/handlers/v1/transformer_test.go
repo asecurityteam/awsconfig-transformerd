@@ -8,12 +8,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	"github.com/asecurityteam/awsconfig-transformerd/pkg/domain"
 	"github.com/asecurityteam/logevent"
 	"github.com/asecurityteam/runhttp"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func logFn(_ context.Context) domain.Logger {
@@ -281,6 +280,103 @@ func TestTransformEC2(t *testing.T) {
 			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
 			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
 			assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
+			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
+			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
+			assert.ElementsMatch(t, tt.ExpectedOutput.Changes, output.Changes)
+		})
+	}
+}
+
+func TestTransformSubnet(t *testing.T) {
+	tc := []struct {
+		Name           string
+		InputFile      string
+		ExpectedOutput Output
+		ExpectError    bool
+		ExpectedError  error
+	}{
+		{
+			Name:      "subnet-created",
+			InputFile: "subnet.create.json",
+			ExpectedOutput: Output{
+				AccountID:    "123456789012",
+				ChangeTime:   "2022-09-01T01:00:50.542Z",
+				Region:       "us-west-2",
+				ResourceType: "AWS::EC2::Subnet",
+				ARN:          "arn:aws:ec2:us-west-2:123456789012:subnet/subnet-000aa0a000a00a0aa",
+				Tags: map[string]string{
+					"key1": "1",
+				},
+				Changes: []Change{
+					{
+						ChangeType:       added,
+						CIDRBlock:        "10.0.0.0/24",
+						RelatedResources: []string{"vpc-000aa0a000a00a0aa"},
+					},
+				},
+			},
+			ExpectError: false,
+		},
+		{
+			Name:      "subnet-updated",
+			InputFile: "subnet.update.json",
+			ExpectedOutput: Output{
+				AccountID:    "123456789012",
+				ChangeTime:   "2022-09-01T01:05:16.232Z",
+				Region:       "us-west-2",
+				ResourceType: "AWS::EC2::Subnet",
+				ARN:          "arn:aws:ec2:us-west-2:123456789012:subnet/subnet-000aa0a000a00a0aa",
+				Tags: map[string]string{
+					"key1": "1",
+				},
+			},
+			ExpectError: false,
+		},
+		{
+			Name:      "subnet-deleted",
+			InputFile: "subnet.delete.json",
+			ExpectedOutput: Output{
+				AccountID:    "123456789012",
+				ChangeTime:   "2022-09-01T01:05:14.878Z",
+				Region:       "us-west-2",
+				ResourceType: "AWS::EC2::Subnet",
+				ARN:          "arn:aws:ec2:us-west-2:123456789012:subnet/subnet-000aa0a000a00a0aa",
+				Tags:         map[string]string{},
+				Changes: []Change{
+					{
+						ChangeType:       deleted,
+						CIDRBlock:        "10.0.0.0/24",
+						RelatedResources: []string{"vpc-000aa0a000a00a0aa"},
+					},
+				},
+			},
+			ExpectError: false,
+		},
+	}
+
+	for _, tt := range tc {
+		tt := tt
+		t.Run(tt.Name, func(t *testing.T) {
+			data, err := ioutil.ReadFile(filepath.Join("testdata", tt.InputFile))
+			require.Nil(t, err)
+
+			var input Input
+			err = json.Unmarshal(data, &input)
+			require.Nil(t, err)
+
+			transformer := &Transformer{LogFn: logFn}
+			output, err := transformer.Handle(context.Background(), input)
+			if tt.ExpectError {
+				require.NotNil(t, err)
+				assert.Equal(t, tt.ExpectedError, err)
+			} else {
+				require.Nil(t, err)
+			}
+
+			assert.Equal(t, tt.ExpectedOutput.AccountID, output.AccountID)
+			assert.Equal(t, tt.ExpectedOutput.Region, output.Region)
+			assert.Equal(t, tt.ExpectedOutput.ARN, output.ARN)
+			assert.Equal(t, tt.ExpectedOutput.ResourceType, output.ResourceType)
 			assert.Equal(t, tt.ExpectedOutput.Tags, output.Tags)
 			assert.Equal(t, tt.ExpectedOutput.ChangeTime, output.ChangeTime)
 			assert.ElementsMatch(t, tt.ExpectedOutput.Changes, output.Changes)
