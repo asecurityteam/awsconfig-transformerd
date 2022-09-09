@@ -15,7 +15,7 @@ func Test_subnetTransformer_Create(t *testing.T) {
 		ConfigurationItemCaptureTime: "2022-09-01T01:00:50.542Z",
 		ResourceType:                 "AWS::EC2::Subnet",
 		ARN:                          "arn:aws:ec2:us-west-2:123456789012:subnet/subnet-000aa0a000a00a0aa",
-		Configuration:                json.RawMessage(`{"cidrBlock": "10.0.0.0/24"}`),
+		Configuration:                json.RawMessage(`{"cidrBlock": "10.0.0.0/24", "vpcId": "vpc-000aa0a000a00a0aa"}`),
 		Tags:                         map[string]string{"key1": "1"},
 	}
 
@@ -44,8 +44,9 @@ func Test_subnetTransformer_Create(t *testing.T) {
 				ChangeTime:   "2022-09-01T01:00:50.542Z",
 				Changes: []Change{
 					{
-						ChangeType: "ADDED",
-						CIDRBlock:  "10.0.0.0/24",
+						ChangeType:       "ADDED",
+						CIDRBlock:        "10.0.0.0/24",
+						RelatedResources: []string{"vpc-000aa0a000a00a0aa"},
 					},
 				},
 				Tags: map[string]string{"key1": "1"},
@@ -111,7 +112,7 @@ func Test_subnetTransformer_Update(t *testing.T) {
 		ConfigurationItemCaptureTime: "2022-09-01T01:00:50.542Z",
 		ResourceType:                 "AWS::EC2::Subnet",
 		ARN:                          "arn:aws:ec2:us-west-2:123456789012:subnet/subnet-000aa0a000a00a0aa",
-		Configuration:                json.RawMessage(`{"cidrBlock": "10.0.0.0/24"}`),
+		Configuration:                json.RawMessage(`{"cidrBlock": "10.0.0.0/24", "vpcId": "vpc-000aa0a000a00a0aa"}`),
 		Tags:                         map[string]string{"key1": "1"},
 	}
 
@@ -168,7 +169,7 @@ func Test_subnetTransformer_Delete(t *testing.T) {
 		ConfigurationItemCaptureTime: "2022-09-01T01:00:50.542Z",
 		ResourceType:                 "AWS::EC2::Subnet",
 		ARN:                          "arn:aws:ec2:us-west-2:123456789012:subnet/subnet-000aa0a000a00a0aa",
-		Configuration:                json.RawMessage(`{"cidrBlock": "10.0.0.0/24"}`),
+		Configuration:                json.RawMessage(`{"cidrBlock": "10.0.0.0/24", "vpcId": "vpc-000aa0a000a00a0aa"}`),
 	}
 
 	tests := []struct {
@@ -186,7 +187,7 @@ func Test_subnetTransformer_Delete(t *testing.T) {
 				ConfigurationItemDiff: configurationItemDiff{
 					ChangeType: "DELETE",
 					ChangedProperties: map[string]json.RawMessage{
-						"Configuration": json.RawMessage("{\"previousValue\":{\"cidrBlock\": \"10.0.0.0/24\"},\"updatedValue\":null,\"changeType\":\"DELETE\"}"),
+						"Configuration": json.RawMessage(`{"previousValue": {"cidrBlock": "10.0.0.0/24", "vpcId": "vpc-000aa0a000a00a0aa"}, "updatedValue": null, "changeType": "DELETE"}`),
 					},
 				},
 			},
@@ -198,8 +199,9 @@ func Test_subnetTransformer_Delete(t *testing.T) {
 				ChangeTime:   "2022-09-01T01:00:50.542Z",
 				Changes: []Change{
 					{
-						ChangeType: "DELETED",
-						CIDRBlock:  "10.0.0.0/24",
+						ChangeType:       "DELETED",
+						CIDRBlock:        "10.0.0.0/24",
+						RelatedResources: []string{"vpc-000aa0a000a00a0aa"},
 					},
 				},
 			},
@@ -270,7 +272,7 @@ func Test_subnetTransformer_Delete(t *testing.T) {
 }
 
 func Test_extractSubnetInfo(t *testing.T) {
-	subnetConfig := subnetConfiguration{CIDRBlock: "10.0.0.0/24"}
+	subnetConfig := subnetConfiguration{CIDRBlock: "10.0.0.0/24", VPCID: "vpc-000aa0a000a00a0aa"}
 	change := extractSubnetInfo(&subnetConfig)
-	assert.Equal(t, change, Change{CIDRBlock: "10.0.0.0/24"})
+	assert.Equal(t, change, Change{CIDRBlock: "10.0.0.0/24", RelatedResources: []string{"vpc-000aa0a000a00a0aa"}})
 }

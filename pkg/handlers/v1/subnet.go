@@ -8,6 +8,7 @@ import (
 
 type subnetConfiguration struct {
 	CIDRBlock string `json:"cidrBlock"`
+	VPCID     string `json:"vpcId"`
 }
 
 type subnetConfigurationDiff struct {
@@ -71,7 +72,8 @@ func (t subnetTransformer) Delete(event awsConfigEvent) (Output, bool, error) {
 }
 
 func extractSubnetInfo(config *subnetConfiguration) Change {
-	return Change{
-		CIDRBlock: config.CIDRBlock,
-	}
+	change := Change{}
+	change.CIDRBlock = config.CIDRBlock
+	change.RelatedResources = append(change.RelatedResources, config.VPCID)
+	return change
 }

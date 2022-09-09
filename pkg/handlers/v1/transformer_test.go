@@ -309,8 +309,9 @@ func TestTransformSubnet(t *testing.T) {
 				},
 				Changes: []Change{
 					{
-						CIDRBlock:  "10.0.0.0/24",
-						ChangeType: added,
+						ChangeType:       added,
+						CIDRBlock:        "10.0.0.0/24",
+						RelatedResources: []string{"vpc-000aa0a000a00a0aa"},
 					},
 				},
 			},
@@ -343,8 +344,9 @@ func TestTransformSubnet(t *testing.T) {
 				Tags:         map[string]string{},
 				Changes: []Change{
 					{
-						CIDRBlock:  "10.0.0.0/24",
-						ChangeType: deleted,
+						ChangeType:       deleted,
+						CIDRBlock:        "10.0.0.0/24",
+						RelatedResources: []string{"vpc-000aa0a000a00a0aa"},
 					},
 				},
 			},
