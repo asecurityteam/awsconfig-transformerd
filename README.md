@@ -195,6 +195,7 @@ The current version only supports extracting network changes from:
 * Elastic Load Balancers
 * Application Load Balancers
 * Elastic Network Interfaces
+* Subnets
 
 Caveat to this list: Not all ENIs are supported. Currently this targets a subset of them, 
 those that are requester managed.
