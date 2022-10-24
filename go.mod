@@ -18,6 +18,6 @@ require (
 	github.com/rs/xlog v0.0.0-20171227185259-131980fab91b // indirect
 	github.com/rs/xstats v0.0.0-20170813190920-c67367528e16 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.8.1
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
 )
