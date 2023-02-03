@@ -4,6 +4,9 @@
 [![Build Status](https://travis-ci.com/asecurityteam/awsconfig-transformerd.png?branch=master)](https://travis-ci.com/asecurityteam/awsconfig-transformerd)
 [![codecov.io](https://codecov.io/github/asecurityteam/awsconfig-transformerd/coverage.svg?branch=master)](https://codecov.io/github/asecurityteam/awsconfig-transformerd?branch=master)
 
+# No longer maintained
+This repository is no longer updated.
+
 <https://github.com/asecurityteam/awsconfig-transformer>
 
   - [Overview](#overview)
@@ -18,7 +21,6 @@
       - [Contributing Agreement](#contributing-agreement)
 
 <!-- /TOC -->
-
 <a id="markdown-overview" name="overview"></a>
 ## Overview<!-- TOC -->
 
