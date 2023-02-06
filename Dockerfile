@@ -1,4 +1,4 @@
-FROM asecurityteam/sdcli:v1.2.0 AS BUILDER
+FROM asecurityteam/sdcli:v1.2.9 AS BUILDER
 RUN mkdir -p /go/src/github.com/asecurityteam/awsconfig-transformerd
 WORKDIR /go/src/github.com/asecurityteam/awsconfig-transformerd
 COPY --chown=sdcli:sdcli . .
