@@ -7,7 +7,7 @@ require (
 	github.com/asecurityteam/logevent v1.6.1
 	github.com/asecurityteam/runhttp v0.4.0
 	github.com/asecurityteam/serverfull v0.5.1
-	github.com/asecurityteam/settings v0.5.0
+	github.com/asecurityteam/settings v0.6.0
 	github.com/aws/aws-sdk-go v1.19.6
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible // indirect
