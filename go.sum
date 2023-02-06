@@ -7,6 +7,8 @@ github.com/asecurityteam/component-expvar v0.1.0 h1:AUOE/O1r5gYH/R3r0upG7juaZ+Mr
 github.com/asecurityteam/component-expvar v0.1.0/go.mod h1:M8TDepPm3bXMZ8QcpnlBCBcETSl7hsLnZ+UHsx7H6rQ=
 github.com/asecurityteam/component-log v0.1.0 h1:jyktrvq0kMfbwUsMA6GGj9jgmkkGIciC8UQnrr0GkG0=
 github.com/asecurityteam/component-log v0.1.0/go.mod h1:IkUEj6i4ZFtneNAuVV7Vne8GoMA3c6wrWbao/zJyF1s=
+github.com/asecurityteam/component-log v0.2.1 h1:VE/EDM7VXoHwg8PCzl/GQmua2E3hFCcL7qawdO2z74Y=
+github.com/asecurityteam/component-log v0.2.1/go.mod h1:kmIPz6LkpDUsw56RxNEeIk3OoA4zPOY2w3a9zC6rRSk=
 github.com/asecurityteam/component-signals v0.1.0 h1:aB/RxnOJmpqv4VYBGN0O1z4Ygul9BoqaF8BZ7Oj07Mg=
 github.com/asecurityteam/component-signals v0.1.0/go.mod h1:WfBa3Yc5TSqqhDB4aaifDIGx33EGhKuKzhYlKe/aeMk=
 github.com/asecurityteam/component-stat v0.1.0 h1:XTrPmQOyvs7iK5iW1ll6W5Eh7ZKDnZnrHtljYq1YAh8=
@@ -23,6 +25,8 @@ github.com/asecurityteam/runhttp v0.0.0-20190308211650-60620809c493 h1:NlxDw3V5m
 github.com/asecurityteam/runhttp v0.0.0-20190308211650-60620809c493/go.mod h1:13Zb/7m5FQVu1gHjt+YDse6aqfJ5LuC79u8xjM64jrI=
 github.com/asecurityteam/runhttp v0.4.0 h1:V0sjkLA7Onkmpnnu574yQL8k9g4JEtyDvWnmJ2fTZ4s=
 github.com/asecurityteam/runhttp v0.4.0/go.mod h1:dxiW787QEACjoGlcgcbzGO90IY//PsV6d45Mf4kQVME=
+github.com/asecurityteam/runhttp v0.4.2 h1:AxQkvOdske1Bb9ALsvCrrfWeXps/CZOgv/V1uq/a1vg=
+github.com/asecurityteam/runhttp v0.4.2/go.mod h1:KPO2M4hcyURAx3hnfFswrWksV6/ixHD96a6OKQSp4E8=
 github.com/asecurityteam/serverfull v0.1.0 h1:DAzLWpSsXVtq+jbWHEEX07CJvcCDM0PQXp3ROQfFYkg=
 github.com/asecurityteam/serverfull v0.1.0/go.mod h1:PHStbkLUDG0ndv/B97RtPZOKhjB14vY1S4zsl2e4+lw=
 github.com/asecurityteam/serverfull v0.5.1 h1:5OZ7LmNjNIWzDO4O0ZdTmjBjET7CkjGEPxYjx3PYuQs=
@@ -80,6 +84,7 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/rs/cors v1.7.0 h1:+88SsELBHx5r+hZ8TCkggzSstaWNbDvThkVK8H6f9ik=
 github.com/rs/cors v1.7.0/go.mod h1:gFx+x8UowdsKA9AchylcLynDq+nNFfI8FkUZdN/jGCU=
+github.com/rs/cors v1.8.2/go.mod h1:XyqrcTp5zjWr1wsJ8PIRZssZ8b/WMcMf71DJnit4EMU=
 github.com/rs/xhandler v0.0.0-20151224012956-d9d9599b6aaf h1:Df4QtDSQdFg5jenZonLrGr7iREOI/YAwYp18P7xjwPk=
 github.com/rs/xhandler v0.0.0-20151224012956-d9d9599b6aaf/go.mod h1:RvLn4FgxWubrpZHtQLnOf6EwhN2hEMusxZOhcW9H3UQ=
 github.com/rs/xhandler v0.0.0-20170707052532-1eb70cf1520d h1:8Tt7DYYdFqLlOIuyiE0RluKem4T+048AUafnIjH80wg=
@@ -99,6 +104,7 @@ github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQD
 github.com/sergi/go-diff v1.0.0/go.mod h1:0CfEIISq7TuYL3j771MWULgwwjU+GofnZX9QAmXWZgo=
 github.com/sergi/go-diff v1.1.0 h1:we8PVUC3FE2uYfodKH/nBHMSetSfHDR6scGdBi+erh0=
 github.com/sergi/go-diff v1.1.0/go.mod h1:STckp+ISIX8hZLjrqAeVduY0gWCT9IjLuqbuNXdaHfM=
+github.com/sergi/go-diff v1.2.0/go.mod h1:STckp+ISIX8hZLjrqAeVduY0gWCT9IjLuqbuNXdaHfM=
 github.com/shurcooL/sanitized_anchor_name v1.0.0/go.mod h1:1NzhyTcUVG4SuEtjjoZeVRXNmyL/1OwPU0+IJeTBvfc=
 github.com/spf13/cast v1.3.0 h1:oget//CVOEoFewqQxwr0Ej5yjygnqGkvggSE/gB35Q8=
 github.com/spf13/cast v1.3.0/go.mod h1:Qx5cxh0v+4UWYiBimWS+eyWzqEqokIECu5etghLkUJE=
